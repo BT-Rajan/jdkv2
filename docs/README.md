@@ -19,7 +19,7 @@
 * [customers.md](features/customers.md)
 * [products-and-formulas.md](features/products-and-formulas.md)
 * `materials-and-inventory.md` *(planned)*
-* `finished-goods.md` *(planned)*
+* [finished-goods.md](features/finished-goods.md)
 * `suppliers.md` *(planned)*
 * `customer-orders.md` *(planned)*
 * `mrp-and-atp.md` *(planned)*
