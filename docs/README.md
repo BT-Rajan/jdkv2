@@ -18,10 +18,10 @@
 * [authentication-and-users.md](features/authentication-and-users.md)
 * [customers.md](features/customers.md)
 * [products-and-formulas.md](features/products-and-formulas.md)
-* `materials-and-inventory.md` *(planned)*
+* [materials-and-inventory.md](features/materials-and-inventory.md)
 * [finished-goods.md](features/finished-goods.md)
-* `suppliers.md` *(planned)*
-* `customer-orders.md` *(planned)*
+* [suppliers.md](features/suppliers.md)
+* [customer-orders.md](features/customer-orders.md)
 * `mrp-and-atp.md` *(planned)*
 * `feasibility-and-risk.md` *(planned)*
 * `reports-and-dashboard.md` *(planned)*
