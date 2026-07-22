@@ -13,18 +13,18 @@
 
 ## Feature Documentation
 
-`features/` will hold one document per operational area as each is built out:
+`features/` holds one document per operational area, added as each is built out:
 
-* `authentication-and-users.md`
-* `customers.md`
-* `products-and-formulas.md`
-* `materials-and-inventory.md`
-* `finished-goods.md`
-* `suppliers.md`
-* `customer-orders.md`
-* `mrp-and-atp.md`
-* `feasibility-and-risk.md`
-* `reports-and-dashboard.md`
+* [authentication-and-users.md](features/authentication-and-users.md)
+* [customers.md](features/customers.md)
+* [products-and-formulas.md](features/products-and-formulas.md)
+* `materials-and-inventory.md` *(planned)*
+* `finished-goods.md` *(planned)*
+* `suppliers.md` *(planned)*
+* `customer-orders.md` *(planned)*
+* `mrp-and-atp.md` *(planned)*
+* `feasibility-and-risk.md` *(planned)*
+* `reports-and-dashboard.md` *(planned)*
 
 ## Roadmap
 
