@@ -8,8 +8,8 @@
 4. [04-application-model.md](04-application-model.md) — how the business is experienced in the app
 5. [05-intelligence-model.md](05-intelligence-model.md) — MRP, ATP, feasibility, risk
 6. [06-architecture.md](06-architecture.md) — technical architecture
-7. `07-security-and-roles.md` — authentication, authorization, roles *(planned)*
-8. `08-development-guide.md` — how to work on this codebase *(planned)*
+7. [07-security-and-roles.md](07-security-and-roles.md) — authentication, authorization, roles
+8. [08-development-guide.md](08-development-guide.md) — how to work on this codebase
 
 ## Feature Documentation
 
