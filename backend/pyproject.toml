@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "jdk-backend"
+version = "0.1.0"
+description = "JDK Manufacturing Operations Platform - backend (FastAPI + Perennia integration)"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.111,<1",
+    "uvicorn[standard]>=0.30,<1",
+    "python-dotenv>=1.0,<2",
+    "pydantic>=2.6,<3",
+    "PyMySQL>=1.1,<2",
+    "pandas>=2.2,<3",
+    "xlsxwriter>=3.2,<4",
+    "openpyxl>=3.1,<4",
+
+    # Perennia platform packages. None of these are vendored or forked here -
+    # they are installed as dependencies and used only through their public
+    # APIs, exactly as the perennia-reference-app demonstrates.
+    "perennia-auth @ git+https://github.com/BT-Rajan/perennia-auth.git@v1.0.0",
+    "perennia-access @ git+https://github.com/BT-Rajan/perennia-access.git@v1.0.0",
+    "perennia-search @ git+https://github.com/BT-Rajan/perennia-search.git@main",
+    "perennia-notify @ git+https://github.com/BT-Rajan/perennia-notify.git@main",
+    "perennia-files @ git+https://github.com/BT-Rajan/perennia-files.git@main",
+]
+
+[tool.setuptools.packages.find]
+include = ["app*"]
