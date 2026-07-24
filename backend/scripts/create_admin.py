@@ -44,12 +44,8 @@ class CapturingMailer:
         pass
 
 
-def main() -> None:
-    if len(sys.argv) != 4:
-        print("Usage: python scripts/create_admin.py <email> <password> <full name>")
-        sys.exit(1)
-
-    email, password, full_name = sys.argv[1], sys.argv[2], sys.argv[3]
+def run(email: str, password: str, full_name: str):
+    """Create the admin and return its subject_id, or None if it already existed."""
     settings = load_settings()
     mailer = CapturingMailer()
 
@@ -78,7 +74,7 @@ def main() -> None:
         subject_id = auth.register(email, password)
     except EmailAlreadyExistsError:
         print(f"{email} already exists - not creating a duplicate.")
-        sys.exit(0)
+        return None
 
     auth.verify_email(mailer.last_verification_token)
     access.assign_role_to_user(subject_id, "administrator")
@@ -87,6 +83,16 @@ def main() -> None:
     repo.upsert_profile(subject_id, full_name, None, None)
 
     print(f"Administrator created: {email} (subject_id={subject_id})")
+    return subject_id
+
+
+def main() -> None:
+    if len(sys.argv) != 4:
+        print("Usage: python scripts/create_admin.py <email> <password> <full name>")
+        sys.exit(1)
+
+    email, password, full_name = sys.argv[1], sys.argv[2], sys.argv[3]
+    run(email, password, full_name)
 
 
 if __name__ == "__main__":
