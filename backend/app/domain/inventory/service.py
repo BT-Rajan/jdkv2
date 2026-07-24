@@ -59,6 +59,11 @@ class InventoryService:
     def _alert_low_stock(self, name: str, material_id: int, current_stock: float, reorder_point: float) -> None:
         # Recipients are resolved by role rather than hardcoded, since
         # perennia-access owns "who currently holds the procurement role".
+        
+        # Ensure notify channels are registered before sending
+        from app.core.security import _ensure_notify_channels
+        _ensure_notify_channels()
+        
         rows, _ = self._user_repo.search(keyword=None, status="active", role="procurement", limit=50, offset=0)
         for row in rows:
             self._notify.send(

@@ -116,6 +116,10 @@ class UserAdminService:
             new_state={"roles": [new_role]},
         )
 
+        # Ensure notify channels are registered before sending
+        from app.core.security import _ensure_notify_channels
+        _ensure_notify_channels()
+        
         identifier = self._repo.get_identifier(subject_id)
         if identifier:
             self._notify.send(
