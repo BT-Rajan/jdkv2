@@ -38,22 +38,114 @@ from perennia_access import PerenniaAccess, AccessConfig, DatabaseConfig as Acce
 # database. 121 is the InnoDB "duplicate key on write or update" errno that
 # surfaces when an ALTER TABLE ADD CONSTRAINT is re-run.
 _ALREADY_EXISTS_ERRNOS = {1005, 1022, 1050, 1061, 1826, 121}
+# 1065: "Query was empty" - defensive fallback for a comment-only chunk
+# slipping past _has_executable_sql.
+_SKIPPABLE_ERRNOS = _ALREADY_EXISTS_ERRNOS | {1065}
 
 
 def _read_package_schema(package: str) -> str:
     return importlib.resources.files(package).joinpath("schema.sql").read_text(encoding="utf-8")
 
 
+def _split_statements(sql: str) -> list:
+    """Split a .sql file into individual statements on ';', correctly
+    ignoring semicolons that appear inside -- line comments, /* */ block
+    comments, or quoted strings/identifiers (naive sql.split(";") breaks on
+    e.g. "-- ...the bytes; it has no notion..." in a comment)."""
+    statements = []
+    buf = []
+    i, n = 0, len(sql)
+    in_line_comment = False
+    in_block_comment = False
+    quote_char = None  # one of ', ", ` while inside a quoted span
+
+    while i < n:
+        ch = sql[i]
+        nxt = sql[i + 1] if i + 1 < n else ""
+
+        if in_line_comment:
+            buf.append(ch)
+            if ch == "\n":
+                in_line_comment = False
+            i += 1
+            continue
+        if in_block_comment:
+            buf.append(ch)
+            if ch == "*" and nxt == "/":
+                buf.append(nxt)
+                i += 2
+                in_block_comment = False
+                continue
+            i += 1
+            continue
+        if quote_char:
+            buf.append(ch)
+            if ch == "\\":  # escaped char, consume it verbatim
+                if nxt:
+                    buf.append(nxt)
+                    i += 2
+                    continue
+            elif ch == quote_char:
+                quote_char = None
+            i += 1
+            continue
+
+        # not currently inside any comment/quote
+        if ch == "-" and nxt == "-":
+            in_line_comment = True
+            buf.append(ch)
+            i += 1
+            continue
+        if ch == "#":
+            in_line_comment = True
+            buf.append(ch)
+            i += 1
+            continue
+        if ch == "/" and nxt == "*":
+            in_block_comment = True
+            buf.append(ch)
+            i += 1
+            continue
+        if ch in ("'", '"', "`"):
+            quote_char = ch
+            buf.append(ch)
+            i += 1
+            continue
+        if ch == ";":
+            statements.append("".join(buf))
+            buf = []
+            i += 1
+            continue
+
+        buf.append(ch)
+        i += 1
+
+    if buf:
+        statements.append("".join(buf))
+    return statements
+
+
+def _has_executable_sql(statement: str) -> bool:
+    """True if statement has any real SQL left once -- / # / block comments
+    are stripped (a chunk that's comment-only would otherwise reach the
+    server as an empty query and error with errno 1065)."""
+    for line in statement.splitlines():
+        line = line.split("--", 1)[0].split("#", 1)[0].strip()
+        if line and not (line.startswith("/*") and line.endswith("*/")):
+            return True
+    return False
+
+
 def _apply(cur, sql: str, label: str) -> None:
-    for statement in sql.split(";"):
+    for statement in _split_statements(sql):
         statement = statement.strip()
-        if not statement:
+        if not statement or not _has_executable_sql(statement):
             continue
         try:
             cur.execute(statement)
         except pymysql.err.OperationalError as exc:
             errno = exc.args[0] if exc.args else None
-            if errno in _ALREADY_EXISTS_ERRNOS:
+            if errno in _SKIPPABLE_ERRNOS:
                 first_line = statement.splitlines()[0][:70]
                 print(f"  [{label}] already applied, skipping: {first_line}...")
                 continue
