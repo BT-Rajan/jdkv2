@@ -28,7 +28,7 @@ from perennia_access import PerenniaAccess, AccessConfig, DatabaseConfig as Acce
 
 
 def _read_package_schema(package: str) -> str:
-    return importlib.resources.files(package).joinpath("schema.sql").read_text()
+    return importlib.resources.files(package).joinpath("schema.sql").read_text(encoding="utf-8")
 
 
 def _apply(cur, sql: str) -> None:
@@ -68,7 +68,7 @@ def main() -> None:
             _apply(cur, _read_package_schema(package))
 
         print("Applying JDK schema...")
-        jdk_schema = (Path(__file__).resolve().parent.parent / "sql" / "schema.sql").read_text()
+        jdk_schema = (Path(__file__).resolve().parent.parent / "sql" / "schema.sql").read_text(encoding="utf-8")
         _apply(cur, jdk_schema)
 
     conn.close()
