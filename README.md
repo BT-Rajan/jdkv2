@@ -68,7 +68,7 @@ role checks.
 | File attachments | Done - generic entity-attachment linking (customers/suppliers/products/orders) via perennia-files |
 | Production Scheduling | **Not started.** `production_schedules` table exists in the schema; no domain/service/API layer yet. |
 | Finished Goods (dedicated spec) | **Partially covered.** A basic ledger lives inside the Products domain; `jdkv2/docs/features/finished-goods.md` was not read in detail, so batch/lot tracking, quality holds, or multi-warehouse requirements it may describe are not yet reflected. |
-| Frontend | **Not started.** Vue 3/TS per `docs/06-architecture.md`; backend API is ready to build against. |
+| Frontend | Done - Vue 3 + TypeScript + Pinia + Vue Router, covering every implemented backend domain. Type-checks and production-builds clean (`npm run build`). |
 
 ## Known gaps worth knowing about
 
@@ -99,3 +99,20 @@ uvicorn app.main:app --reload --port 8000
 ```
 
 Visit `http://localhost:8000/docs` for the interactive API reference.
+
+```bash
+cd frontend
+npm install
+cp .env.example .env   # VITE_API_BASE_URL must match the backend above
+npm run dev            # http://localhost:5173
+```
+
+`npm run build` type-checks (`vue-tsc --noEmit`) before bundling, so a broken
+type is a broken build, not a runtime surprise.
+
+**Token handling, briefly:** the access token lives in memory only (never
+written to storage); the refresh token is persisted in `localStorage` so a
+page reload doesn't force a re-login. That second part is a deliberate,
+documented trade-off (see `frontend/src/services/api.ts`) - the proper fix
+is a backend change to issue the refresh token as an httpOnly cookie, which
+this codebase does not yet do.
