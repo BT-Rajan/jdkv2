@@ -88,7 +88,17 @@ notify = PerenniaNotify(
     ),
     access=access,
 )
-notify.register_channel("email", ConsoleEmailChannel())
+
+# Register channels lazily on first use to avoid requiring identity at import time
+_notify_channel_registered = False
+
+
+def _ensure_notify_channels():
+    """Register notify channels on first use."""
+    global _notify_channel_registered
+    if not _notify_channel_registered:
+        notify.register_channel("email", ConsoleEmailChannel())
+        _notify_channel_registered = True
 
 # --- perennia-files: secure file storage ------------------------------------
 files = PerenniaFiles(

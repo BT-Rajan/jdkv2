@@ -63,6 +63,10 @@ class OrderService:
         self._search.update("order", str(order_id), identity=SYSTEM_IDENTITY)
 
         if status in ("at_risk", "delayed", "cancelled"):
+            # Ensure notify channels are registered before sending
+            from app.core.security import _ensure_notify_channels
+            _ensure_notify_channels()
+            
             self._notify.send(
                 channel="email",
                 recipient=order.get("customer_email") or "operations@jdk.local",
