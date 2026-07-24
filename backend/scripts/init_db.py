@@ -24,6 +24,13 @@ import argparse
 import sys
 from pathlib import Path
 
+# On Windows, stdout redirected to a file (not a real console) falls back to
+# the system ANSI codepage (commonly cp1252), which can't encode most
+# non-ASCII characters. Force UTF-8 so logging never crashes on encoding.
+for _stream in (sys.stdout, sys.stderr):
+    if hasattr(_stream, "reconfigure"):
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 import importlib.resources
@@ -185,12 +192,12 @@ def run(clean: bool = False) -> None:
         for package, label in schemas:
             print(f"Applying {label} schema...")
             _apply(cur, _read_package_schema(package), label)
-            print(f"✔ {label} schema applied successfully.\n")
+            print(f"[OK] {label} schema applied successfully.\n")
 
         print("Applying JDK schema...")
         jdk_schema = (Path(__file__).resolve().parent.parent / "sql" / "schema.sql").read_text(encoding="utf-8")
         _apply(cur, jdk_schema, "jdk")
-        print("✔ JDK schema applied successfully.\n")
+        print("[OK] JDK schema applied successfully.\n")
 
     conn.close()
 

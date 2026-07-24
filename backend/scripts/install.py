@@ -23,6 +23,12 @@ import tempfile
 import traceback
 from pathlib import Path
 
+# See the matching comment in init_db.py: redirected stdout on Windows can
+# fall back to a codepage that can't encode non-ASCII output.
+for _stream in (sys.stdout, sys.stderr):
+    if hasattr(_stream, "reconfigure"):
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+
 BACKEND_DIR = Path(__file__).resolve().parent.parent
 REPO_ROOT = BACKEND_DIR.parent
 ENV_PATH = REPO_ROOT / ".env"
