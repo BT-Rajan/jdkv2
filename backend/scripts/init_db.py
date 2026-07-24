@@ -137,10 +137,9 @@ def _has_executable_sql(statement: str) -> bool:
 
 
 def _apply(cur, sql: str, label: str) -> None:
-    for statement in _split_statements(sql):
-        statement = statement.strip()
-        if not statement or not _has_executable_sql(statement):
-            continue
+    statements = [s.strip() for s in _split_statements(sql)]
+    statements = [s for s in statements if s and _has_executable_sql(s)]
+    for n, statement in enumerate(statements, start=1):
         try:
             cur.execute(statement)
         except pymysql.err.OperationalError as exc:
@@ -150,6 +149,11 @@ def _apply(cur, sql: str, label: str) -> None:
                 print(f"  [{label}] already applied, skipping: {first_line}...")
                 continue
             raise
+        except Exception:
+            print(f"  [{label}] FAILED on statement {n}/{len(statements)}:")
+            print("  " + "\n  ".join(statement.splitlines()[:8]))
+            raise
+    print(f"  [{label}] {len(statements)} statement(s) applied successfully.")
 
 
 def run(clean: bool = False) -> None:
@@ -181,10 +185,12 @@ def run(clean: bool = False) -> None:
         for package, label in schemas:
             print(f"Applying {label} schema...")
             _apply(cur, _read_package_schema(package), label)
+            print(f"✔ {label} schema applied successfully.\n")
 
         print("Applying JDK schema...")
         jdk_schema = (Path(__file__).resolve().parent.parent / "sql" / "schema.sql").read_text(encoding="utf-8")
         _apply(cur, jdk_schema, "jdk")
+        print("✔ JDK schema applied successfully.\n")
 
     conn.close()
 
