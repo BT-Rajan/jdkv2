@@ -19,7 +19,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from perennia_auth import PerenniaAuth, AuthConfig, DatabaseConfig as AuthDatabaseConfig, EmailAlreadyExistsError
-from perennia_access import PerenniaAccess, AccessConfig, DatabaseConfig as AccessDatabaseConfig
+from app.core.sentinel_access import SentinelAccess, AccessConfig
 
 from app.core.config import load_settings
 from app.core.database import Database
@@ -60,12 +60,10 @@ def run(email: str, password: str, full_name: str):
         ),
         mailer=mailer,
     )
-    access = PerenniaAccess(
+    access = SentinelAccess(
         AccessConfig(
-            database=AccessDatabaseConfig(
-                host=settings.db_host, port=settings.db_port, user=settings.db_user,
-                password=settings.db_password, database=settings.db_name,
-            )
+            service_url=settings.sentinel_service_url,
+            client_key=settings.sentinel_client_key,
         )
     )
     permission_definitions.seed(access)

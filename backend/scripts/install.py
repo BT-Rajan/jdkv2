@@ -21,6 +21,7 @@ import subprocess
 import sys
 import tempfile
 import traceback
+import uuid
 from pathlib import Path
 
 # See the matching comment in init_db.py: redirected stdout on Windows can
@@ -94,6 +95,18 @@ def _gather_interactively() -> dict:
         files_secret = secrets.token_urlsafe(48)
         print("Generated a new FILES_SIGNING_SECRET.")
 
+    print("\n-- sentinel-auth (RBAC service) --")
+    sentinel_service_url = _prompt(
+        "sentinel-auth service URL",
+        existing.get("SENTINEL_SERVICE_URL", example.get("SENTINEL_SERVICE_URL", "http://localhost:4000")),
+    )
+    sentinel_client_key = existing.get("SENTINEL_CLIENT_KEY", "")
+    if not sentinel_client_key:
+        sentinel_client_key = str(uuid.uuid4())
+        print("Generated a new SENTINEL_CLIENT_KEY - use this same value when starting sentinel-auth.")
+    else:
+        sentinel_client_key = _prompt("sentinel-auth client key (UUID4)", sentinel_client_key)
+
     print("\n-- Application --")
     environment = _prompt("Environment", existing.get("ENVIRONMENT", "development"))
     cors_origins = _prompt("CORS origins (comma-separated)", existing.get("CORS_ORIGINS", "http://localhost:5173"))
@@ -148,6 +161,10 @@ def _gather_interactively() -> dict:
         f"FILES_SIGNING_SECRET={files_secret}",
         f"FILES_STORAGE_PATH={files_storage_path}",
         f"FILES_MAX_UPLOAD_SIZE={files_max_upload}",
+        "",
+        "# --- sentinel-auth (RBAC service, replaces perennia-access) ---",
+        f"SENTINEL_SERVICE_URL={sentinel_service_url}",
+        f"SENTINEL_CLIENT_KEY={sentinel_client_key}",
         "",
         "# --- Application ---",
         f"ENVIRONMENT={environment}",

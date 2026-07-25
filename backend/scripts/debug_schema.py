@@ -5,7 +5,7 @@ error instead of a wall of DDL.
 
 Usage (from backend/, with the virtualenv active and .env configured):
 
-    python scripts/debug_schema.py                  # step through all 6 schemas
+    python scripts/debug_schema.py                  # step through all 5 schemas
     python scripts/debug_schema.py --only jdk        # step through just one
     python scripts/debug_schema.py --auto            # no pausing, just trace + stop on error
     python scripts/debug_schema.py --only jdk --from 12   # resume from statement #12
@@ -33,7 +33,6 @@ import init_db  # reuse the exact same splitter/comment-handling as the real ins
 
 SCHEMAS = [
     ("perennia_auth", "perennia-auth"),
-    ("perennia_access", "perennia-access"),
     ("perennia_search", "perennia-search"),
     ("perennia_notify", "perennia-notify"),
     ("perennia_files", "perennia-files"),

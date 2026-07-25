@@ -3,19 +3,22 @@ Initialize the JDK database.
 
 Applies, in dependency order:
   1. perennia-auth schema      (identity)
-  2. perennia-access schema    (roles/permissions)
-  3. perennia-search schema    (search index)
-  4. perennia-notify schema    (notifications)
-  5. perennia-files schema     (file storage)
-  6. JDK's own schema          (backend/sql/schema.sql)
-Then seeds JDK's permission/role vocabulary into perennia-access.
+  2. perennia-search schema    (search index)
+  3. perennia-notify schema    (notifications)
+  4. perennia-files schema     (file storage)
+  5. JDK's own schema          (backend/sql/schema.sql)
+Then seeds JDK's permission/role vocabulary into sentinel-auth (roles/
+permissions now live in that service's own database, created by sentinel
+itself on startup - see BT-Rajan/perennia-auth's sentinel/database.py -
+so there is no schema.sql to apply here for it).
 
 Safe to re-run: statements that fail because the table/index/constraint
 already exists (e.g. perennia-files' `ALTER TABLE files ADD CONSTRAINT
 fk_files_current_version ...`, which has no IF NOT EXISTS guard) are
 skipped rather than aborting the run.
 
-Usage (from backend/, with the virtualenv active and .env configured):
+Usage (from backend/, with the virtualenv active and .env configured, and
+the sentinel-auth service already running at SENTINEL_SERVICE_URL):
 
     python scripts/init_db.py            # apply/upgrade in place
     python scripts/init_db.py --clean    # drop the database first, then build fresh
@@ -38,7 +41,7 @@ import pymysql
 
 from app.core.config import load_settings
 from app.permissions import definitions as permission_definitions
-from perennia_access import PerenniaAccess, AccessConfig, DatabaseConfig as AccessDatabaseConfig
+from app.core.sentinel_access import SentinelAccess, AccessConfig
 
 # MySQL/MariaDB errnos meaning "this table/index/constraint already exists" -
 # harmless to skip when re-applying schemas against a partially-initialized
@@ -183,7 +186,6 @@ def run(clean: bool = False) -> None:
 
     schemas = [
         ("perennia_auth", "perennia-auth"),
-        ("perennia_access", "perennia-access"),
         ("perennia_search", "perennia-search"),
         ("perennia_notify", "perennia-notify"),
         ("perennia_files", "perennia-files"),
@@ -201,15 +203,13 @@ def run(clean: bool = False) -> None:
 
     conn.close()
 
-    access = PerenniaAccess(
+    access = SentinelAccess(
         AccessConfig(
-            database=AccessDatabaseConfig(
-                host=settings.db_host, port=settings.db_port, user=settings.db_user,
-                password=settings.db_password, database=settings.db_name,
-            )
+            service_url=settings.sentinel_service_url,
+            client_key=settings.sentinel_client_key,
         )
     )
-    print("Seeding JDK permission/role vocabulary...")
+    print("Seeding JDK permission/role vocabulary into sentinel-auth...")
     permission_definitions.seed(access)
 
     print("Done.")
