@@ -136,6 +136,16 @@
 .page-header { margin-bottom: var(--space-5); }
 .page-header p { color: var(--color-neutral-500); margin-top: 4px; }
 
+.alert-info {
+  background: var(--color-info-50);
+  color: var(--color-info-700);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-sm);
+  margin-bottom: var(--space-4);
+}
+.alert-info a { color: inherit; text-decoration: underline; }
+
 .empty-state {
   text-align: center;
   padding: var(--space-8) var(--space-4);

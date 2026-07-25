@@ -220,8 +220,19 @@ CREATE TABLE IF NOT EXISTS factory_config (
   val       TEXT         NOT NULL
 ) ENGINE=InnoDB;
 
+-- Deliberately NOT seeding deepseek_api_key here - it starts unset until an
+-- administrator sets it via PATCH /api/settings (see app/domain/settings).
 INSERT IGNORE INTO factory_config (key_name, val) VALUES
   ('batch_size_kg',                '1000'),
   ('daily_production_capacity_kg', '20000'),
   ('working_days_per_week',        '6'),
-  ('company_name',                 'JDK');
+  ('planning_horizon_days',        '30'),
+  ('app_name',                     'JDK Smart Factory'),
+  ('deepseek_model',               'deepseek-chat'),
+  ('deepseek_base_url',            'https://api.deepseek.com'),
+  ('company_name',                 'JDK'),
+  ('company_address',              ''),
+  ('company_phone',                ''),
+  ('company_email',                ''),
+  ('company_gstin',                ''),
+  ('company_website',              '');

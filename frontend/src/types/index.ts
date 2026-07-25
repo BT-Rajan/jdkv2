@@ -287,3 +287,41 @@ export interface ListResponse<T> {
   total: number;
   [key: string]: T[] | number;
 }
+
+// ── Settings ──────────────────────────────────────────────────────────────
+export interface AppSettings {
+  deepseek_model: string;
+  deepseek_base_url: string;
+  deepseek_api_key_set: boolean;
+  deepseek_api_key_preview: string | null;
+
+  batch_size_kg: number;
+  daily_capacity_kg: number;
+  planning_horizon_days: number;
+  app_name: string;
+
+  company_name: string;
+  company_address: string;
+  company_phone: string;
+  company_email: string;
+  company_gstin: string;
+  company_website: string;
+}
+
+export interface UpdateSettingsRequest {
+  deepseek_api_key?: string;
+  deepseek_model?: string;
+  deepseek_base_url?: string;
+
+  batch_size_kg?: number;
+  daily_capacity_kg?: number;
+  planning_horizon_days?: number;
+  app_name?: string;
+
+  company_name?: string;
+  company_address?: string;
+  company_phone?: string;
+  company_email?: string;
+  company_gstin?: string;
+  company_website?: string;
+}

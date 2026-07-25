@@ -2,7 +2,7 @@ import { createRouter, createWebHistory, type RouteRecordRaw } from "vue-router"
 import { useAuthStore } from "../stores/auth";
 import {
   CUSTOMERS_VIEW, INVENTORY_VIEW, SUPPLIERS_VIEW, PRODUCTS_VIEW,
-  ORDERS_VIEW, MRP_VIEW, REPORTS_VIEW, USERS_VIEW,
+  ORDERS_VIEW, MRP_VIEW, REPORTS_VIEW, USERS_VIEW, SETTINGS_VIEW,
 } from "../permissions";
 
 const routes: RouteRecordRaw[] = [
@@ -61,6 +61,8 @@ const routes: RouteRecordRaw[] = [
 
       { path: "users", name: "users", component: () => import("../pages/users/UsersListPage.vue"), meta: { permission: USERS_VIEW } },
       { path: "users/:id", name: "user-detail", component: () => import("../pages/users/UserDetailPage.vue"), meta: { permission: USERS_VIEW } },
+
+      { path: "settings", name: "settings", component: () => import("../pages/settings/SettingsPage.vue"), meta: { permission: SETTINGS_VIEW } },
     ],
   },
   { path: "/:pathMatch(.*)*", name: "not-found", component: () => import("../pages/NotFoundPage.vue"), meta: { public: true } },

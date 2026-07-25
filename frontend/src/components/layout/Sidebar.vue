@@ -4,7 +4,7 @@ import { useAuthStore } from "../../stores/auth";
 import { useUiStore } from "../../stores/ui";
 import {
   CUSTOMERS_VIEW, INVENTORY_VIEW, SUPPLIERS_VIEW, PRODUCTS_VIEW,
-  ORDERS_VIEW, MRP_VIEW, REPORTS_VIEW, USERS_VIEW,
+  ORDERS_VIEW, MRP_VIEW, REPORTS_VIEW, USERS_VIEW, SETTINGS_VIEW,
 } from "../../permissions";
 
 const auth = useAuthStore();
@@ -21,6 +21,7 @@ const items: NavItem[] = [
   { to: "/suppliers", label: "Suppliers", icon: "◧", permission: SUPPLIERS_VIEW },
   { to: "/mrp", label: "MRP & ATP", icon: "◔", permission: MRP_VIEW },
   { to: "/users", label: "Users", icon: "◍", permission: USERS_VIEW },
+  { to: "/settings", label: "Settings", icon: "⚙", permission: SETTINGS_VIEW },
 ];
 
 const visibleItems = computed(() => items.filter((i) => !i.permission || auth.hasPermission(i.permission)));

@@ -63,6 +63,10 @@ MRP_EXECUTE = "mrp_execute"
 # --- Daily Status & Reports -----------------------------------------------------
 REPORTS_VIEW = "reports_view"
 
+# --- Application Settings (AI config, production parameters, company info) ----
+SETTINGS_VIEW = "settings_view"
+SETTINGS_MANAGE = "settings_manage"  # includes writing the DeepSeek API key - sensitive
+
 # --- perennia-search integration: codes fixed by perennia-search itself --------
 SEARCH_EXECUTE = "search.execute"
 SEARCH_MANAGE = "search.manage"
@@ -100,6 +104,8 @@ PERMISSIONS: list[tuple[str, str]] = [
     (MRP_VIEW, "View MRP / ATP analysis"),
     (MRP_EXECUTE, "Run MRP calculations"),
     (REPORTS_VIEW, "View daily status and reports"),
+    (SETTINGS_VIEW, "View application settings (AI config, production parameters, company info)"),
+    (SETTINGS_MANAGE, "Change application settings, including the DeepSeek API key"),
     (SEARCH_EXECUTE, "Search across business resources"),
     (SEARCH_MANAGE, "Manage search indexes"),
     (NOTIFY_SEND, "Send and schedule notifications"),
@@ -128,7 +134,7 @@ ROLES: dict[str, dict] = {
         "permissions": [
             CUSTOMERS_VIEW, PRODUCTS_VIEW, INVENTORY_VIEW, SUPPLIERS_VIEW,
             ORDERS_VIEW, MRP_VIEW, REPORTS_VIEW, SEARCH_EXECUTE, NOTIFY_READ,
-            FILE_VIEW, FILE_DOWNLOAD, USERS_VIEW,
+            FILE_VIEW, FILE_DOWNLOAD, USERS_VIEW, SETTINGS_VIEW,
         ],
     },
     "operations": {
