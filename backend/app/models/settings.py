@@ -16,6 +16,12 @@ class AppSettings(BaseModel):
     deepseek_api_key_set: bool = False
     deepseek_api_key_preview: str | None = None
 
+    # AI Assistant behaviour - free text, not validated/parsed here. The
+    # assistant reads these at call time to shape its system prompt; JDK
+    # itself never interprets their contents.
+    assistant_system_prompt: str = ""
+    assistant_data_scope: str = ""
+
     # Production parameters
     batch_size_kg: float = 1000
     daily_capacity_kg: float = 20000
@@ -27,8 +33,9 @@ class AppSettings(BaseModel):
     company_address: str = ""
     company_phone: str = ""
     company_email: str = ""
-    company_gstin: str = ""
+    company_tax_id: str = ""
     company_website: str = ""
+    company_logo_attachment_id: str | None = None
 
 
 class UpdateSettingsRequest(BaseModel):
@@ -44,6 +51,9 @@ class UpdateSettingsRequest(BaseModel):
     deepseek_model: str | None = None
     deepseek_base_url: str | None = None
 
+    assistant_system_prompt: str | None = None
+    assistant_data_scope: str | None = None
+
     batch_size_kg: float | None = Field(default=None, gt=0)
     daily_capacity_kg: float | None = Field(default=None, gt=0)
     planning_horizon_days: int | None = Field(default=None, gt=0)
@@ -53,5 +63,6 @@ class UpdateSettingsRequest(BaseModel):
     company_address: str | None = None
     company_phone: str | None = None
     company_email: str | None = None
-    company_gstin: str | None = None
+    company_tax_id: str | None = None
     company_website: str | None = None
+    company_logo_attachment_id: str | None = None

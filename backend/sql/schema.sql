@@ -154,6 +154,29 @@ CREATE TABLE IF NOT EXISTS finished_goods_inventory (
   CONSTRAINT fk_fg_product FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
+-- Production cycle: one row per product describing how a batch of THAT
+-- product is actually run on the floor (time, people, machines, special
+-- handling). This is master/reference data, distinct from
+-- `production_schedules` above (which is a dated instance of production
+-- being planned/run). Raw material requirements are deliberately NOT
+-- duplicated here - they're derived at read time from the product's
+-- active formula x batch_size, so the formula stays the single source of
+-- truth for material composition (see app/domain/production).
+CREATE TABLE IF NOT EXISTS product_production_cycles (
+  product_id                   INT UNSIGNED NOT NULL PRIMARY KEY,
+  batch_size                   DECIMAL(14,3) NOT NULL,
+  batch_size_unit              VARCHAR(20)   NOT NULL DEFAULT 'kg',
+  time_per_batch_minutes       INT UNSIGNED  NOT NULL,
+  finished_products_per_batch  DECIMAL(14,3) NOT NULL,
+  output_per_batch             DECIMAL(14,3) NOT NULL,
+  output_per_batch_unit        VARCHAR(20)   NOT NULL DEFAULT 'kg',
+  manpower_required            SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+  machinery_required            TEXT         NULL,
+  special_requirements         TEXT          NULL,
+  updated_at                   DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT fk_production_cycle_product FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
 -- ── Customer Orders ───────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS customer_orders (
   id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -222,6 +245,10 @@ CREATE TABLE IF NOT EXISTS factory_config (
 
 -- Deliberately NOT seeding deepseek_api_key here - it starts unset until an
 -- administrator sets it via PATCH /api/settings (see app/domain/settings).
+-- `company_gstin` is kept out of this seed list (superseded by
+-- `company_tax_id`) but the settings service still reads it as a
+-- fallback for databases created before the Tax ID rename, so existing
+-- values aren't silently dropped.
 INSERT IGNORE INTO factory_config (key_name, val) VALUES
   ('batch_size_kg',                '1000'),
   ('daily_production_capacity_kg', '20000'),
@@ -230,9 +257,12 @@ INSERT IGNORE INTO factory_config (key_name, val) VALUES
   ('app_name',                     'JDK Smart Factory'),
   ('deepseek_model',               'deepseek-chat'),
   ('deepseek_base_url',            'https://api.deepseek.com'),
+  ('assistant_system_prompt',      ''),
+  ('assistant_data_scope',         ''),
   ('company_name',                 'JDK'),
   ('company_address',              ''),
   ('company_phone',                ''),
   ('company_email',                ''),
-  ('company_gstin',                ''),
-  ('company_website',              '');
+  ('company_tax_id',               ''),
+  ('company_website',              ''),
+  ('company_logo_attachment_id',   '');

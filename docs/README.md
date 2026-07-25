@@ -22,9 +22,10 @@
 * [finished-goods.md](features/finished-goods.md)
 * [suppliers.md](features/suppliers.md)
 * [customer-orders.md](features/customer-orders.md)
-* `mrp-and-atp.md` *(planned)*
-* `feasibility-and-risk.md` *(planned)*
-* `reports-and-dashboard.md` *(planned)*
+* [production-cycles.md](features/production-cycles.md)
+* [mrp-and-atp.md](features/mrp-and-atp.md)
+* [feasibility-and-risk.md](features/feasibility-and-risk.md)
+* [reports-and-dashboard.md](features/reports-and-dashboard.md)
 
 ## Roadmap
 

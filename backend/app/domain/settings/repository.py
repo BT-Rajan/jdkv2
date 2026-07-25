@@ -8,6 +8,8 @@ _KNOWN_KEYS = {
     "deepseek_api_key",
     "deepseek_model",
     "deepseek_base_url",
+    "assistant_system_prompt",
+    "assistant_data_scope",
     "batch_size_kg",
     "daily_production_capacity_kg",
     "planning_horizon_days",
@@ -16,8 +18,13 @@ _KNOWN_KEYS = {
     "company_address",
     "company_phone",
     "company_email",
+    "company_tax_id",
+    # Legacy key, superseded by company_tax_id - kept readable (never
+    # written to) so pre-rename values still surface as a fallback. See
+    # SettingsService.get().
     "company_gstin",
     "company_website",
+    "company_logo_attachment_id",
 }
 
 

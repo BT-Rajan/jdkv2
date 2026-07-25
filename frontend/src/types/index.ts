@@ -295,6 +295,9 @@ export interface AppSettings {
   deepseek_api_key_set: boolean;
   deepseek_api_key_preview: string | null;
 
+  assistant_system_prompt: string;
+  assistant_data_scope: string;
+
   batch_size_kg: number;
   daily_capacity_kg: number;
   planning_horizon_days: number;
@@ -304,14 +307,18 @@ export interface AppSettings {
   company_address: string;
   company_phone: string;
   company_email: string;
-  company_gstin: string;
+  company_tax_id: string;
   company_website: string;
+  company_logo_attachment_id: string | null;
 }
 
 export interface UpdateSettingsRequest {
   deepseek_api_key?: string;
   deepseek_model?: string;
   deepseek_base_url?: string;
+
+  assistant_system_prompt?: string;
+  assistant_data_scope?: string;
 
   batch_size_kg?: number;
   daily_capacity_kg?: number;
@@ -322,6 +329,43 @@ export interface UpdateSettingsRequest {
   company_address?: string;
   company_phone?: string;
   company_email?: string;
-  company_gstin?: string;
+  company_tax_id?: string;
   company_website?: string;
+  company_logo_attachment_id?: string;
+}
+
+// ── Production Cycle ──────────────────────────────────────────────────────
+export interface RawMaterialRequirementLine {
+  material_id: number;
+  material_name: string;
+  unit: string;
+  quantity_per_batch: number;
+}
+
+export interface ProductionCycle {
+  product_id: number;
+  batch_size: number;
+  batch_size_unit: string;
+  time_per_batch_minutes: number;
+  finished_products_per_batch: number;
+  output_per_batch: number;
+  output_per_batch_unit: string;
+  manpower_required: number;
+  machinery_required: string;
+  special_requirements: string | null;
+  raw_material_requirements: RawMaterialRequirementLine[];
+  has_active_formula: boolean;
+  updated_at: string;
+}
+
+export interface ProductionCycleUpsertRequest {
+  batch_size: number;
+  batch_size_unit: string;
+  time_per_batch_minutes: number;
+  finished_products_per_batch: number;
+  output_per_batch: number;
+  output_per_batch_unit: string;
+  manpower_required: number;
+  machinery_required: string;
+  special_requirements: string | null;
 }
