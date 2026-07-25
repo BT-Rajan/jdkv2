@@ -7,6 +7,7 @@ structural defaults for local development.
 """
 from dataclasses import dataclass
 import os
+import uuid
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -72,11 +73,20 @@ def load_settings() -> Settings:
 
     cors_origins_raw = os.getenv("CORS_ORIGINS", "http://localhost:5173")
 
-    sentinel_client_key = os.getenv("SENTINEL_CLIENT_KEY", "")
+    sentinel_client_key = os.getenv("SENTINEL_CLIENT_KEY", "").strip()
     if not sentinel_client_key:
         raise RuntimeError(
             "SENTINEL_CLIENT_KEY is not set. This must be the UUID4 client key "
             "issued for JDK's tenant in the sentinel-auth service."
+        )
+    try:
+        if str(uuid.UUID(sentinel_client_key, version=4)) != sentinel_client_key.lower():
+            raise ValueError
+    except ValueError:
+        raise RuntimeError(
+            f"SENTINEL_CLIENT_KEY={sentinel_client_key!r} is not a valid UUID4. "
+            "Check for stray whitespace/quotes in .env, and that it matches the "
+            "SENTINEL_CLIENT_KEY in sentinel-auth's own .env exactly."
         )
 
     return Settings(

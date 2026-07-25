@@ -43,7 +43,10 @@ else:
     env_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 client_key = next(
-    l.split("=", 1)[1] for l in env_path.read_text(encoding="utf-8").splitlines()
+    l.split("=", 1)[1].strip() for l in env_path.read_text(encoding="utf-8").splitlines()
     if l.startswith("SENTINEL_CLIENT_KEY=")
 )
-print(client_key)
+# No trailing newline: cmd's `for /f` on Windows captures this script's
+# stdout including a stray \r if we print() a line ending, which then gets
+# baked into the UUID the caller writes into jdkv2's .env.
+sys.stdout.write(client_key)

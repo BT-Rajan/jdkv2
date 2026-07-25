@@ -10,7 +10,7 @@ from pathlib import Path
 
 jdk_dir = Path(sys.argv[1])
 sentinel_port = sys.argv[2]
-client_key = sys.argv[3]
+client_key = sys.argv[3].strip()
 env_path = jdk_dir / ".env"
 
 lines = env_path.read_text(encoding="utf-8").splitlines() if env_path.exists() else []
@@ -18,7 +18,7 @@ existing = {}
 for line in lines:
     if "=" in line and not line.strip().startswith("#"):
         k, v = line.split("=", 1)
-        existing[k] = v
+        existing[k] = v.strip()
 
 always_set = {
     "SENTINEL_SERVICE_URL": f"http://127.0.0.1:{sentinel_port}",
