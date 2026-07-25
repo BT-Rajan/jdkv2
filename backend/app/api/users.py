@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Query
 
-from perennia_access import AuthenticatedIdentity
+from app.core.sentinel_access import AuthenticatedIdentity
 
 from app.core.security import auth, access, notify, require_permission
 from app.core.database import Database

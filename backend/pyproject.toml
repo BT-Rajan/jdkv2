@@ -16,12 +16,15 @@ dependencies = [
     "pandas>=2.2,<3",
     "xlsxwriter>=3.2,<4",
     "openpyxl>=3.1,<4",
+    "requests>=2.31,<3",
 
     # Perennia platform packages. None of these are vendored or forked here -
     # they are installed as dependencies and used only through their public
     # APIs, exactly as the perennia-reference-app demonstrates.
+    # NOTE: perennia-auth is still used for login/JWT only (v1.0.0). Its
+    # `main` branch (sentinel-auth) is a separate RBAC microservice, wired in
+    # via app.core.sentinel_access, which replaces perennia-access below.
     "perennia-auth @ git+https://github.com/BT-Rajan/perennia-auth.git@v1.0.0",
-    "perennia-access @ git+https://github.com/BT-Rajan/perennia-access.git@v1.0.0",
     "perennia-search @ git+https://github.com/BT-Rajan/perennia-search.git@main",
     "perennia-notify @ git+https://github.com/BT-Rajan/perennia-notify.git@main",
     "perennia-files @ git+https://github.com/BT-Rajan/perennia-files.git@main",

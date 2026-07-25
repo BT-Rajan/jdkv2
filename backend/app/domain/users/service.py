@@ -8,7 +8,7 @@ by perennia-access. This module is the only place those three are composed
 for the user-management use case.
 """
 from perennia_auth import PerenniaAuth, EmailAlreadyExistsError
-from perennia_access import PerenniaAccess, AuthenticatedIdentity, RoleNotFoundError
+from app.core.sentinel_access import SentinelAccess as PerenniaAccess, AuthenticatedIdentity, RoleNotFoundError
 from perennia_notify import PerenniaNotify
 
 from app.core.errors import AppError

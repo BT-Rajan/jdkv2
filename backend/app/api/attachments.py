@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, UploadFile, File, Form
 from fastapi.responses import Response
 
-from perennia_access import AuthenticatedIdentity
+from app.core.sentinel_access import AuthenticatedIdentity
 
 from app.core.security import require_permission, files as files_client
 from app.core.database import Database

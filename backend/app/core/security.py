@@ -15,12 +15,7 @@ app/permissions/definitions.py) rather than JDK re-implementing checks.
 from fastapi import Depends, Header
 
 from perennia_auth import PerenniaAuth, AuthConfig, DatabaseConfig as AuthDatabaseConfig
-from perennia_access import (
-    PerenniaAccess,
-    AccessConfig,
-    DatabaseConfig as AccessDatabaseConfig,
-    AuthenticatedIdentity,
-)
+from app.core.sentinel_access import SentinelAccess, AccessConfig, AuthenticatedIdentity
 from perennia_search import PerenniaSearch, SearchConfig, DatabaseConfig as SearchDatabaseConfig
 from perennia_notify import PerenniaNotify, NotifyConfig, DatabaseConfig as NotifyDatabaseConfig
 from perennia_files import PerenniaFiles, FilesConfig, DatabaseConfig as FilesDatabaseConfig
@@ -48,16 +43,11 @@ auth = PerenniaAuth(
     mailer=ConsoleMailer(frontend_base_url="http://localhost:5173"),
 )
 
-# --- perennia-access: what may this user do? --------------------------------
-access = PerenniaAccess(
+# --- sentinel-auth: what may this user do? (replaces perennia-access) ------
+access = SentinelAccess(
     AccessConfig(
-        database=AccessDatabaseConfig(
-            host=settings.db_host,
-            port=settings.db_port,
-            user=settings.db_user,
-            password=settings.db_password,
-            database=settings.db_name,
-        ),
+        service_url=settings.sentinel_service_url,
+        client_key=settings.sentinel_client_key,
     )
 )
 

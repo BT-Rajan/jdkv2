@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 
-from perennia_access import AuthenticatedIdentity
+from app.core.sentinel_access import AuthenticatedIdentity
 
 from app.core.security import auth, access, get_current_identity
 from app.models.users import LoginRequest, TokenResponse, RefreshRequest, MeResponse

@@ -44,6 +44,10 @@ class Settings:
     files_storage_path: str
     files_max_upload_size: int
 
+    # sentinel-auth (RBAC service, replaces perennia-access)
+    sentinel_service_url: str
+    sentinel_client_key: str
+
     # Application
     cors_origins: list
     environment: str
@@ -68,6 +72,13 @@ def load_settings() -> Settings:
 
     cors_origins_raw = os.getenv("CORS_ORIGINS", "http://localhost:5173")
 
+    sentinel_client_key = os.getenv("SENTINEL_CLIENT_KEY", "")
+    if not sentinel_client_key:
+        raise RuntimeError(
+            "SENTINEL_CLIENT_KEY is not set. This must be the UUID4 client key "
+            "issued for JDK's tenant in the sentinel-auth service."
+        )
+
     return Settings(
         db_host=os.getenv("DB_HOST", "localhost"),
         db_port=int(os.getenv("DB_PORT", "3306")),
@@ -83,4 +94,6 @@ def load_settings() -> Settings:
         environment=os.getenv("ENVIRONMENT", "development"),
         default_admin_email=os.getenv("DEFAULT_ADMIN_EMAIL", "admin@jdk.local"),
         default_admin_password=os.getenv("DEFAULT_ADMIN_PASSWORD", ""),
+        sentinel_service_url=os.getenv("SENTINEL_SERVICE_URL", "http://localhost:4000"),
+        sentinel_client_key=sentinel_client_key,
     )

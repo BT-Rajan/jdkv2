@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from perennia_auth import PerenniaAuthError
-from perennia_access import AccessError
+from app.core.sentinel_access import AccessError
 
 from app.core.errors import AppError, resolve
 from app.core.security import settings, access, search

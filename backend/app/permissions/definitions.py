@@ -17,7 +17,7 @@ are enforced by real endpoints as of this phase; the rest are reserved for
 the modules described in the project roadmap (see README.md) and are seeded
 here so role definitions don't need to change shape later.
 """
-from perennia_access import PerenniaAccess, AuthenticatedIdentity
+from app.core.sentinel_access import SentinelAccess as PerenniaAccess, AuthenticatedIdentity
 
 # A synthetic identity for JDK's own internal operations (e.g. reindexing a
 # record after a write) that are not really "a user's action" even though
