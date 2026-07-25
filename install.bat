@@ -43,7 +43,7 @@ if exist "%SENTINEL_DIR%\.git" (
     pushd "%SENTINEL_DIR%"
     git fetch origin main || (echo [FAIL] git fetch failed & exit /b 1)
     git checkout main || (echo [FAIL] git checkout main failed & exit /b 1)
-    git pull origin main || (echo [FAIL] git pull failed & exit /b 1)
+    git reset --hard origin/main || (echo [FAIL] git reset failed & exit /b 1)
     popd
 ) else (
     git clone "%SENTINEL_REPO%" "%SENTINEL_DIR%" || (echo [FAIL] git clone sentinel-auth failed & exit /b 1)
@@ -56,6 +56,19 @@ if not exist "venv\Scripts\activate.bat" (
 )
 call venv\Scripts\activate.bat
 python -m pip install --upgrade pip >nul
+
+:: Upstream requirements.txt pins PyJWT==2.8.1, which was never published to
+:: PyPI (only 2.8.0 exists) - rewrite that one line in the local clone only.
+python -c "
+import pathlib
+p = pathlib.Path('requirements.txt')
+text = p.read_text(encoding='utf-8')
+fixed = text.replace('PyJWT==2.8.1', 'PyJWT==2.8.0')
+if fixed != text:
+    p.write_text(fixed, encoding='utf-8')
+    print('[OK] patched requirements.txt: PyJWT==2.8.1 -> PyJWT==2.8.0')
+"
+
 echo Installing sentinel-auth dependencies...
 pip install -r requirements.txt || (echo [FAIL] pip install -r requirements.txt failed & exit /b 1)
 :: requirements.txt is missing two hard runtime imports (main.py/server.py):
