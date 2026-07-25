@@ -19,6 +19,11 @@ set "JDK_DIR=%HTDOCS%\jdkv2"
 set "SENTINEL_REPO=https://github.com/BT-Rajan/perennia-auth.git"
 set "JDK_REPO=https://github.com/BT-Rajan/jdkv2.git"
 set "SENTINEL_PORT=4000"
+set "SENTINEL_DB_HOST=127.0.0.1"
+set "SENTINEL_DB_PORT=3306"
+set "SENTINEL_DB_USER=root"
+set "SENTINEL_DB_PASSWORD="
+set "SENTINEL_DB_NAME=sentinel_auth"
 
 echo(
 echo === JDK install: checking prerequisites ===
@@ -56,14 +61,24 @@ pip install -r requirements.txt || (echo [FAIL] pip install -r requirements.txt 
 :: requirements.txt is missing two hard runtime imports (main.py/server.py):
 pip install flask-cors waitress || (echo [FAIL] pip install flask-cors/waitress failed & exit /b 1)
 
+echo Creating MySQL database "%SENTINEL_DB_NAME%" if it doesn't exist...
+python -c "
+import pymysql
+conn = pymysql.connect(host='%SENTINEL_DB_HOST%', port=%SENTINEL_DB_PORT%, user='%SENTINEL_DB_USER%', password='%SENTINEL_DB_PASSWORD%', charset='utf8mb4', autocommit=True)
+with conn.cursor() as cur:
+    cur.execute('CREATE DATABASE IF NOT EXISTS `%SENTINEL_DB_NAME%` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci')
+conn.close()
+print('[OK] database %SENTINEL_DB_NAME% ready.')
+" || (echo [FAIL] could not create %SENTINEL_DB_NAME% - is MySQL running? & exit /b 1)
+
 :: Generate this tenant's secrets once; reuse on every re-run of this script.
 if not exist ".env" (
     echo Generating sentinel-auth .env with a fresh JWT secret + client key...
     for /f "delims=" %%K in ('python -c "import secrets; print(secrets.token_urlsafe(48))"') do set "JWT_SECRET=%%K"
     for /f "delims=" %%U in ('python -c "import uuid; print(uuid.uuid4())"') do set "CLIENT_KEY=%%U"
     (
-        echo SENTINEL_DATABASE_TYPE=sqlite
-        echo SENTINEL_SQLITE_PATH=./sentinel.sqlite3
+        echo SENTINEL_DATABASE_TYPE=mysql
+        echo SENTINEL_MYSQL_URL=mysql+pymysql://%SENTINEL_DB_USER%:%SENTINEL_DB_PASSWORD%@%SENTINEL_DB_HOST%:%SENTINEL_DB_PORT%/%SENTINEL_DB_NAME%
         echo SENTINEL_JWT_SECRET_KEY=!JWT_SECRET!
         echo SENTINEL_SERVER_HOST=127.0.0.1
         echo SENTINEL_SERVER_PORT=%SENTINEL_PORT%
@@ -74,7 +89,7 @@ if not exist ".env" (
     echo [OK] sentinel-auth\.env written.
 ) else (
     echo sentinel-auth\.env already exists - leaving it as-is.
-    for /f "tokens=2 delims==" %%U in ('findstr /b "SENTINEL_JWT_SECRET_KEY=" .env') do set "JWT_SECRET=%%U"
+    for /f "tokens=2 delims==" %%K in ('findstr /b "SENTINEL_JWT_SECRET_KEY=" .env') do set "JWT_SECRET=%%K"
 )
 
 :: Pull the client key back out so we can write the matching value into jdkv2's .env below.
