@@ -19,6 +19,7 @@ chcp 65001 >nul
 :: the end) / "Administrator" if not given.
 :: ============================================================================
 
+set "HERE=%~dp0"
 set "HTDOCS=C:\xampp\htdocs"
 set "SENTINEL_DIR=%HTDOCS%\sentinel-auth"
 set "JDK_DIR=%HTDOCS%\jdkv2"
@@ -121,68 +122,14 @@ echo === Step 3/8: sentinel-auth - patch permission-name validation ===
 :: sentinel/validation.py's permission-name regex only allows
 :: [a-zA-Z0-9_-], but jdkv2's whole permission vocabulary uses dotted codes
 :: (users.view, customer.manage, ...) - every assign_permission_to_role call
-:: 400s with "Invalid permission name" until dots are allowed. Idempotent:
-:: only rewrites if the old strict pattern is still present.
-python -c "
-import pathlib
-p = pathlib.Path('sentinel/validation.py')
-text = p.read_text(encoding='utf-8')
-old = 'pattern = re.compile(r\"^[a-zA-Z0-9_-]{1,128}$\")'
-new = 'pattern = re.compile(r\"^[a-zA-Z0-9_.-]{1,128}$\")'
-if old in text:
-    p.write_text(text.replace(old, new), encoding='utf-8')
-    print('[OK] patched validation.py to allow dots in permission names.')
-else:
-    print('[OK] validation.py already patched (or upstream changed - check manually if seeding still 400s).')
-"
+:: 400s with "Invalid permission name" until dots are allowed.
+python "%HERE%installer\patch_sentinel_validation.py" "%SENTINEL_DIR%" || (echo [FAIL] patch_sentinel_validation.py failed & exit /b 1)
 
 echo(
 echo === Step 4/8: sentinel-auth - .env ===
-:: sentinel-auth's own storage is intentionally NOT the jdk MySQL database -
-:: it's a separate decoupled service, and it only supports Postgres and
-:: SQLite for writes (AuthorizationService._dialect_insert has no MySQL
-:: branch - reads like /api/roles work on MySQL, which is why the service
-:: can look "up" while every seed/write call still fails). SQLite needs no
-:: server or credentials, so use that.
-if not exist ".env" (
-    echo Generating sentinel-auth .env with a fresh JWT secret + client key...
-    for /f "delims=" %%K in ('python -c "import secrets; print(secrets.token_urlsafe(48))"') do set "JWT_SECRET=%%K"
-    for /f "delims=" %%U in ('python -c "import uuid; print(uuid.uuid4())"') do set "CLIENT_KEY=%%U"
-    (
-        echo SENTINEL_DATABASE_TYPE=sqlite
-        echo SENTINEL_SQLITE_PATH=./sentinel.sqlite3
-        echo SENTINEL_JWT_SECRET_KEY=!JWT_SECRET!
-        echo SENTINEL_SERVER_HOST=127.0.0.1
-        echo SENTINEL_SERVER_PORT=%SENTINEL_PORT%
-        echo SENTINEL_ALLOW_CORS=true
-        echo SENTINEL_CORS_ORIGINS=http://localhost:5173
-        echo SENTINEL_DEBUG_MODE=false
-        echo SENTINEL_CLIENT_KEY=!CLIENT_KEY!
-    ) > .env
-    echo [OK] sentinel-auth\.env written.
-) else (
-    echo sentinel-auth\.env already exists.
-    :: Repair a .env left over from a previous run that configured MySQL.
-    findstr /b /c:"SENTINEL_DATABASE_TYPE=mysql" .env >nul 2>&1 && (
-        echo [FIX] existing .env is configured for MySQL - switching it to SQLite.
-        python -c "
-import pathlib
-p = pathlib.Path('.env')
-lines = [l for l in p.read_text(encoding='utf-8').splitlines() if not l.startswith('SENTINEL_DATABASE_TYPE=') and not l.startswith('SENTINEL_MYSQL_URL=') and not l.startswith('SENTINEL_SQLITE_PATH=')]
-lines[:0] = ['SENTINEL_DATABASE_TYPE=sqlite', 'SENTINEL_SQLITE_PATH=./sentinel.sqlite3']
-p.write_text('\n'.join(lines) + '\n', encoding='utf-8')
-print('[OK] rewrote SENTINEL_DATABASE_TYPE/SENTINEL_MYSQL_URL -> sqlite in .env')
-"
-    )
-    :: If a previous run left no CLIENT_KEY line at all, generate one now.
-    findstr /b "SENTINEL_CLIENT_KEY=" .env >nul 2>&1 || (
-        for /f "delims=" %%U in ('python -c "import uuid; print(uuid.uuid4())"') do (
-            echo SENTINEL_CLIENT_KEY=%%U>>.env
-        )
-        echo [OK] added a SENTINEL_CLIENT_KEY to existing .env.
-    )
-)
-for /f "tokens=2 delims==" %%C in ('findstr /b "SENTINEL_CLIENT_KEY=" .env 2^>nul') do set "CLIENT_KEY=%%C"
+for /f "delims=" %%K in ('python "%HERE%installer\write_sentinel_env.py" "%SENTINEL_DIR%" "%SENTINEL_PORT%"') do set "CLIENT_KEY=%%K"
+if "%CLIENT_KEY%"=="" (echo [FAIL] write_sentinel_env.py failed & exit /b 1)
+echo [OK] sentinel-auth\.env ready.
 popd
 
 :: Write a tiny launcher so the service can be (re)started without re-running this script.
@@ -229,63 +176,11 @@ popd
 :: ---------------------------------------------------------------------------
 echo(
 echo === Step 6/8: jdkv2 .env ===
-set "JDK_ENV=%JDK_DIR%\.env"
-if not exist "%JDK_ENV%" (
-    copy "%JDK_DIR%\.env.example" "%JDK_ENV%" >nul
-    echo Created %JDK_ENV% from .env.example.
+if not exist "%JDK_DIR%\.env" (
+    copy "%JDK_DIR%\.env.example" "%JDK_DIR%\.env" >nul
+    echo Created %JDK_DIR%\.env from .env.example.
 )
-
-for /f "delims=" %%K in ('python -c "import secrets; print(secrets.token_urlsafe(48))"') do set "AUTH_SECRET=%%K"
-for /f "delims=" %%K in ('python -c "import secrets; print(secrets.token_urlsafe(48))"') do set "FILES_SECRET=%%K"
-
-:: Upsert connection/secret values without disturbing the rest of the file.
-:: Secrets are only filled in if not already set, so re-runs don't rotate them.
-python -c "
-import pathlib
-p = pathlib.Path(r'%JDK_ENV%')
-lines = p.read_text(encoding='utf-8').splitlines() if p.exists() else []
-existing = {}
-for line in lines:
-    if '=' in line and not line.strip().startswith('#'):
-        k, v = line.split('=', 1)
-        existing[k] = v
-
-always_set = {
-    'SENTINEL_SERVICE_URL': 'http://127.0.0.1:%SENTINEL_PORT%',
-    'SENTINEL_CLIENT_KEY': r'!CLIENT_KEY!',
-}
-fill_if_empty = {
-    'DB_HOST': 'localhost',
-    'DB_PORT': '3306',
-    'DB_USER': 'root',
-    'DB_NAME': 'jdk',
-    'AUTH_SIGNING_SECRET': r'!AUTH_SECRET!',
-    'FILES_SIGNING_SECRET': r'!FILES_SECRET!',
-    'FILES_STORAGE_PATH': './var/files',
-    'ENVIRONMENT': 'development',
-    'CORS_ORIGINS': 'http://localhost:5173',
-}
-
-values = dict(always_set)
-for k, v in fill_if_empty.items():
-    if not existing.get(k):
-        values[k] = v
-
-seen = set()
-out = []
-for line in lines:
-    key = line.split('=', 1)[0] if '=' in line and not line.strip().startswith('#') else None
-    if key in values:
-        out.append(f'{key}={values[key]}')
-        seen.add(key)
-    else:
-        out.append(line)
-for key, val in values.items():
-    if key not in seen:
-        out.append(f'{key}={val}')
-p.write_text('\n'.join(out) + '\n', encoding='utf-8')
-print('[OK] wrote', p)
-"
+python "%HERE%installer\upsert_jdk_env.py" "%JDK_DIR%" "%SENTINEL_PORT%" "%CLIENT_KEY%" || (echo [FAIL] upsert_jdk_env.py failed & exit /b 1)
 
 :: ---------------------------------------------------------------------------
 :: 4. Start sentinel-auth, wait for it, then initialize the jdk database
@@ -294,22 +189,7 @@ echo(
 echo === Step 7/8: starting sentinel-auth and initializing the database ===
 start "sentinel-auth" cmd /k "%SENTINEL_DIR%\start-sentinel.bat"
 echo Waiting for sentinel-auth to come up (polling http://127.0.0.1:%SENTINEL_PORT%/ping)...
-python -c "
-import sys, time, urllib.request
-url = 'http://127.0.0.1:%SENTINEL_PORT%/ping'
-deadline = time.time() + 90
-last_err = None
-while time.time() < deadline:
-    try:
-        urllib.request.urlopen(url, timeout=2)
-        print('[OK] sentinel-auth responded on', url)
-        sys.exit(0)
-    except Exception as e:
-        last_err = e
-        time.sleep(1)
-print('[FAIL] sentinel-auth did not respond on', url, 'within 90s. Last error:', last_err)
-sys.exit(1)
-"
+python "%HERE%installer\wait_for_url.py" "http://127.0.0.1:%SENTINEL_PORT%/ping" 90
 if errorlevel 1 (
     echo [FAIL] sentinel-auth never became ready.
     echo         Check the separate "sentinel-auth" console window for a traceback.
@@ -324,7 +204,7 @@ python scripts\init_db.py || (echo [FAIL] init_db.py failed - is MySQL running a
 echo(
 echo Creating admin account (%ADMIN_EMAIL%)...
 if "%ADMIN_PASSWORD%"=="" (
-    for /f "delims=" %%P in ('python -c "import secrets; print(secrets.token_urlsafe(12))"') do set "ADMIN_PASSWORD=%%P"
+    for /f "delims=" %%P in ('python "%HERE%installer\gen_secret.py"') do set "ADMIN_PASSWORD=%%P"
 )
 if not exist ".admin_created" (
     python scripts\create_admin.py "%ADMIN_EMAIL%" "%ADMIN_PASSWORD%" "%ADMIN_NAME%"
