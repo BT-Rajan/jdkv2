@@ -6,8 +6,8 @@ PyMySQL<2,>=1.1
 pandas<3,>=2.2
 xlsxwriter<4,>=3.2
 openpyxl<4,>=3.1
+requests<3,>=2.31
 perennia-auth @ git+https://github.com/BT-Rajan/perennia-auth.git@v1.0.0
-perennia-access @ git+https://github.com/BT-Rajan/perennia-access.git@v1.0.0
 perennia-search @ git+https://github.com/BT-Rajan/perennia-search.git@main
 perennia-notify @ git+https://github.com/BT-Rajan/perennia-notify.git@main
 perennia-files @ git+https://github.com/BT-Rajan/perennia-files.git@main

@@ -31,37 +31,37 @@ SYSTEM_SUBJECT_ID = "00000000-0000-0000-0000-000000000000"
 SYSTEM_IDENTITY = AuthenticatedIdentity(subject_id=SYSTEM_SUBJECT_ID, session_id="system")
 
 # --- User Administration (this phase) ---------------------------------------
-USERS_VIEW = "users.view"
-USERS_MANAGE = "users.manage"  # create, update, promote/demote, deactivate
+USERS_VIEW = "users_view"
+USERS_MANAGE = "users_manage"  # create, update, promote/demote, deactivate
 
 # --- Customers ---------------------------------------------------------------
-CUSTOMERS_VIEW = "customer.view"
-CUSTOMERS_MANAGE = "customer.manage"
+CUSTOMERS_VIEW = "customer_view"
+CUSTOMERS_MANAGE = "customer_manage"
 
 # --- Products & Formulas -----------------------------------------------------
-PRODUCTS_VIEW = "product.view"
-PRODUCTS_MANAGE = "product.manage"  # includes formula versioning - sensitive
+PRODUCTS_VIEW = "product_view"
+PRODUCTS_MANAGE = "product_manage"  # includes formula versioning - sensitive
 
 # --- Materials & Inventory ----------------------------------------------------
-INVENTORY_VIEW = "inventory.view"
-INVENTORY_ADJUST = "inventory.adjust"  # sensitive - auditable
+INVENTORY_VIEW = "inventory_view"
+INVENTORY_ADJUST = "inventory_adjust"  # sensitive - auditable
 
 # --- Suppliers ----------------------------------------------------------------
-SUPPLIERS_VIEW = "supplier.view"
-SUPPLIERS_MANAGE = "supplier.manage"
+SUPPLIERS_VIEW = "supplier_view"
+SUPPLIERS_MANAGE = "supplier_manage"
 
 # --- Customer Orders -----------------------------------------------------------
-ORDERS_VIEW = "order.view"
-ORDERS_CREATE = "order.create"
-ORDERS_EDIT = "order.edit"
-ORDERS_DELETE = "order.delete"
+ORDERS_VIEW = "order_view"
+ORDERS_CREATE = "order_create"
+ORDERS_EDIT = "order_edit"
+ORDERS_DELETE = "order_delete"
 
 # --- MRP & ATP / Feasibility & Risk --------------------------------------------
-MRP_VIEW = "mrp.view"
-MRP_EXECUTE = "mrp.execute"
+MRP_VIEW = "mrp_view"
+MRP_EXECUTE = "mrp_execute"
 
 # --- Daily Status & Reports -----------------------------------------------------
-REPORTS_VIEW = "reports.view"
+REPORTS_VIEW = "reports_view"
 
 # --- perennia-search integration: codes fixed by perennia-search itself --------
 SEARCH_EXECUTE = "search.execute"
