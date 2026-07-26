@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, reactive, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { ordersApi } from "../../services/orders";
 import { feasibilityApi } from "../../services/mrp";
@@ -10,6 +10,7 @@ import { ORDER_STATUSES } from "../../types";
 import LoadingSpinner from "../../components/ui/LoadingSpinner.vue";
 import StatusBadge from "../../components/ui/StatusBadge.vue";
 import ConfirmDialog from "../../components/ui/ConfirmDialog.vue";
+import Modal from "../../components/ui/Modal.vue";
 import AttachmentsPanel from "../../components/AttachmentsPanel.vue";
 import type { Order, FeasibilityResult } from "../../types";
 
@@ -68,6 +69,44 @@ async function confirmCancel() {
     cancelling.value = false;
   }
 }
+
+// ── Edit (everything but customer & product) ───────────────────────────────
+const showEdit = ref(false);
+const saving = ref(false);
+const editForm = reactive({
+  quantity_kg: 0, bag_size_kg: 50, order_date: "", delivery_date: "", priority: "normal", notes: "",
+});
+
+function openEdit() {
+  if (!order.value) return;
+  editForm.quantity_kg = order.value.quantity_kg;
+  editForm.bag_size_kg = order.value.bag_size_kg;
+  editForm.order_date = order.value.order_date || "";
+  editForm.delivery_date = order.value.delivery_date || "";
+  editForm.priority = order.value.priority;
+  editForm.notes = order.value.notes || "";
+  showEdit.value = true;
+}
+
+async function submitEdit() {
+  saving.value = true;
+  try {
+    order.value = await ordersApi.update(id, {
+      quantity_kg: editForm.quantity_kg,
+      bag_size_kg: editForm.bag_size_kg,
+      order_date: editForm.order_date || undefined,
+      delivery_date: editForm.delivery_date || undefined,
+      priority: editForm.priority,
+      notes: editForm.notes || undefined,
+    } as any);
+    ui.toast("Order updated.", "success");
+    showEdit.value = false;
+  } catch (e: any) {
+    ui.toast(e.message || "Couldn't update order. Delivery date must be later than order date.", "error");
+  } finally {
+    saving.value = false;
+  }
+}
 </script>
 
 <template>
@@ -83,6 +122,7 @@ async function confirmCancel() {
         </div>
       </div>
       <div class="row" v-if="auth.hasPermission(ORDERS_EDIT)">
+        <button class="btn btn-secondary" @click="openEdit">Edit</button>
         <select class="input" style="max-width:220px" :disabled="changingStatus" @change="setStatus(($event.target as HTMLSelectElement).value)">
           <option value="" selected disabled>Change status…</option>
           <option v-for="s in ORDER_STATUSES" :key="s" :value="s">{{ s.replace(/_/g, " ") }}</option>
@@ -94,7 +134,7 @@ async function confirmCancel() {
     </div>
 
     <div class="card" v-if="feasibility">
-      <div class="card-header"><h3>Feasibility</h3></div>
+      <div class="card-header"><h3>Feasibility (live)</h3></div>
       <div class="card-body">
         <div class="row" style="margin-bottom: var(--space-3)">
           <StatusBadge :status="feasibility.outcome" />
@@ -114,7 +154,12 @@ async function confirmCancel() {
         <div><div class="text-xs muted">Customer</div><div><a @click.prevent="router.push(`/customers/${order.customer_id}`)" href="#">{{ order.customer_name }}</a></div></div>
         <div><div class="text-xs muted">Product</div><div><a @click.prevent="router.push(`/products/${order.product_id}`)" href="#">{{ order.product_name }}</a></div></div>
         <div><div class="text-xs muted">Quantity</div><div>{{ order.quantity_kg }} kg ({{ order.bags }} bags of {{ order.bag_size_kg }}kg)</div></div>
+        <div><div class="text-xs muted">Order date</div><div>{{ order.order_date || "—" }}</div></div>
         <div><div class="text-xs muted">Delivery date</div><div>{{ order.delivery_date || "—" }}</div></div>
+        <div v-if="order.quotation_id">
+          <div class="text-xs muted">From quotation</div>
+          <div><a href="#" @click.prevent="router.push(`/quotations/${order.quotation_id}`)">View quotation</a></div>
+        </div>
         <div style="grid-column:1/-1" v-if="order.notes"><div class="text-xs muted">Notes</div><div>{{ order.notes }}</div></div>
       </div>
     </div>
@@ -131,5 +176,29 @@ async function confirmCancel() {
       @confirm="confirmCancel"
       @cancel="showCancel = false"
     />
+
+    <Modal v-if="showEdit" title="Edit order" @close="showEdit = false">
+      <p class="text-sm muted" style="margin-top:0">Customer and product are locked to the originating quotation and can't be changed here.</p>
+      <div class="form-grid">
+        <div class="field"><label>Quantity (kg)</label><input v-model.number="editForm.quantity_kg" type="number" class="input" /></div>
+        <div class="field"><label>Bag size (kg)</label><input v-model.number="editForm.bag_size_kg" type="number" class="input" /></div>
+        <div class="field"><label>Order date</label><input v-model="editForm.order_date" type="date" class="input" /></div>
+        <div class="field"><label>Delivery date</label><input v-model="editForm.delivery_date" type="date" class="input" /></div>
+        <div class="field">
+          <label>Priority</label>
+          <select v-model="editForm.priority" class="input">
+            <option value="critical">Critical</option>
+            <option value="high">High</option>
+            <option value="normal">Normal</option>
+            <option value="low">Low</option>
+          </select>
+        </div>
+      </div>
+      <div class="field"><label>Notes</label><textarea v-model="editForm.notes" class="input" rows="2" /></div>
+      <template #footer>
+        <button class="btn btn-secondary" @click="showEdit = false">Cancel</button>
+        <button class="btn btn-primary" :disabled="saving" @click="submitEdit">{{ saving ? "Saving…" : "Save changes" }}</button>
+      </template>
+    </Modal>
   </div>
 </template>

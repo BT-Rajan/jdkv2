@@ -19,11 +19,6 @@ export const ordersApi = {
   checkAvailability: (productId: number, quantityKg: number) =>
     apiFetch<Availability>(`/api/orders/availability${qs({ product_id: productId, quantity_kg: quantityKg })}`),
 
-  create: (body: {
-    customer_id: number; product_id: number; quantity_kg: number; bag_size_kg?: number;
-    delivery_date?: string; priority?: string; notes?: string;
-  }) => apiFetch<Order>("/api/orders", { method: "POST", body }),
-
   update: (id: number, body: Partial<Order>) =>
     apiFetch<Order>(`/api/orders/${id}`, { method: "PATCH", body }),
 

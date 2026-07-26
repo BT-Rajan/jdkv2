@@ -28,18 +28,20 @@ class OrderService:
             "fulfillable_from_stock": shortfall_kg == 0,
         }
 
-    def create(self, identity, customer_id: int, product_id: int, quantity_kg: float,
-               bag_size_kg: float, delivery_date, priority: str, notes: str | None) -> dict:
-        if not self._customer_repo.get(customer_id):
-            raise AppError("not_found")
-        if not self._product_repo.get(product_id):
-            raise AppError("not_found")
-        if quantity_kg <= 0:
+    def create_from_quotation(self, identity, quotation: dict, order_date, delivery_date,
+                               bag_size_kg: float, priority: str, notes: str | None) -> dict:
+        """The only path that creates an order. customer_id, product_id and
+        quantity_kg are taken from the accepted quotation, never from the
+        caller, so an order can never diverge from what was quoted."""
+        if order_date < quotation["quote_date"]:
+            raise AppError("validation_error")
+        if delivery_date <= order_date:
             raise AppError("validation_error")
 
         order_id = self._repo.create(
-            customer_id, product_id, quantity_kg, bag_size_kg, delivery_date,
-            priority, notes, identity.subject_id,
+            quotation["customer_id"], quotation["product_id"], float(quotation["quantity_kg"]),
+            bag_size_kg, delivery_date, priority, notes, identity.subject_id,
+            chain_id=quotation["chain_id"], quotation_id=quotation["id"], order_date=order_date,
         )
         self._search.index("order", str(order_id), identity=SYSTEM_IDENTITY)
         return self.get(order_id)
@@ -48,6 +50,12 @@ class OrderService:
         order = self._repo.get(order_id)
         if not order:
             raise AppError("not_found")
+
+        effective_order_date = data.get("order_date", order["order_date"])
+        effective_delivery_date = data.get("delivery_date", order["delivery_date"])
+        if effective_order_date and effective_delivery_date and effective_delivery_date <= effective_order_date:
+            raise AppError("validation_error")
+
         self._repo.update(order_id, data)
         self._search.update("order", str(order_id), identity=SYSTEM_IDENTITY)
         return self.get(order_id)

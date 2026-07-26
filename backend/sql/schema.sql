@@ -266,3 +266,96 @@ INSERT IGNORE INTO factory_config (key_name, val) VALUES
   ('company_tax_id',               ''),
   ('company_website',              ''),
   ('company_logo_attachment_id',   '');
+
+-- ════════════════════════════════════════════════════════════════════════
+--  Sales workflow: Feasibility -> Quotation -> Order -> Delivery
+--  A single `chain_id` (UUID) links every record born from the same
+--  feasibility check all the way through to delivery, so the full lineage
+--  of a sale can be traced with one WHERE clause across all four tables.
+--  None of these tables get a DELETE endpoint (see app/api/*) - history is
+--  amended, never removed, and only under the history_amend permission.
+-- ════════════════════════════════════════════════════════════════════════
+
+CREATE TABLE IF NOT EXISTS feasibility_runs (
+  id                       CHAR(36)      NOT NULL PRIMARY KEY,
+  chain_id                 CHAR(36)      NOT NULL,
+  customer_id              INT UNSIGNED  NOT NULL,
+  product_id               INT UNSIGNED  NOT NULL,
+  quantity_kg              DECIMAL(14,3) NOT NULL,
+  requested_delivery_date  DATE          NOT NULL,
+  outcome                  ENUM('feasible','partially_feasible','feasible_on_later_date',
+                                 'at_risk','not_feasible') NOT NULL,
+  estimated_fulfillment_date DATE        NULL,
+  promptly_available_kg    DECIMAL(14,3) NOT NULL DEFAULT 0,
+  remaining_kg             DECIMAL(14,3) NOT NULL DEFAULT 0,
+  constraints_json         JSON          NULL,
+  status                   ENUM('open','converted','superseded') NOT NULL DEFAULT 'open',
+  notes                    TEXT          NULL,
+  created_by_subject_id    CHAR(36)      NOT NULL,
+  created_at               DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  amended_at                DATETIME     NULL,
+  amended_by_subject_id      CHAR(36)    NULL,
+  CONSTRAINT fk_feasibility_customer FOREIGN KEY (customer_id) REFERENCES customers(id),
+  CONSTRAINT fk_feasibility_product FOREIGN KEY (product_id) REFERENCES products(id),
+  KEY idx_feasibility_chain (chain_id)
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS quotations (
+  id                     CHAR(36)      NOT NULL PRIMARY KEY,
+  chain_id               CHAR(36)      NOT NULL,
+  feasibility_id         CHAR(36)      NOT NULL,
+  quote_no               VARCHAR(50)   NOT NULL UNIQUE,
+  customer_id            INT UNSIGNED  NOT NULL,
+  product_id             INT UNSIGNED  NOT NULL,
+  quantity_kg            DECIMAL(14,3) NOT NULL,
+  unit_price             DECIMAL(12,4) NOT NULL DEFAULT 0,
+  total_amount           DECIMAL(14,2) NOT NULL DEFAULT 0,
+  quote_date             DATE          NOT NULL,
+  valid_until            DATE          NULL,
+  requested_delivery_date DATE         NOT NULL,
+  terms                  TEXT          NULL,
+  notes                  TEXT          NULL,
+  status                 ENUM('draft','sent','accepted','rejected','expired','converted')
+                         NOT NULL DEFAULT 'draft',
+  created_by_subject_id  CHAR(36)      NOT NULL,
+  created_at             DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at             DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  amended_at             DATETIME      NULL,
+  amended_by_subject_id  CHAR(36)      NULL,
+  CONSTRAINT fk_quotation_feasibility FOREIGN KEY (feasibility_id) REFERENCES feasibility_runs(id),
+  CONSTRAINT fk_quotation_customer FOREIGN KEY (customer_id) REFERENCES customers(id),
+  CONSTRAINT fk_quotation_product FOREIGN KEY (product_id) REFERENCES products(id),
+  KEY idx_quotation_chain (chain_id)
+) ENGINE=InnoDB;
+
+-- customer_orders can now only be born from an accepted quotation.
+-- quotation_id is nullable purely so pre-existing rows created before this
+-- migration remain valid; app code always sets it for new orders.
+ALTER TABLE customer_orders
+  ADD COLUMN IF NOT EXISTS chain_id CHAR(36) NULL AFTER id,
+  ADD COLUMN IF NOT EXISTS quotation_id CHAR(36) NULL AFTER chain_id,
+  ADD COLUMN IF NOT EXISTS order_date DATE NULL AFTER quotation_id;
+
+ALTER TABLE customer_orders
+  ADD CONSTRAINT fk_order_quotation FOREIGN KEY (quotation_id) REFERENCES quotations(id);
+
+CREATE TABLE IF NOT EXISTS deliveries (
+  id                     CHAR(36)      NOT NULL PRIMARY KEY,
+  chain_id               CHAR(36)      NOT NULL,
+  order_id               INT UNSIGNED  NOT NULL,
+  delivery_no            VARCHAR(50)   NOT NULL UNIQUE,
+  delivery_date          DATE          NOT NULL,
+  dispatched_qty_kg      DECIMAL(14,3) NOT NULL,
+  carrier                VARCHAR(150)  NULL,
+  tracking_ref           VARCHAR(150)  NULL,
+  status                 ENUM('scheduled','dispatched','delivered','cancelled')
+                         NOT NULL DEFAULT 'scheduled',
+  notes                  TEXT          NULL,
+  created_by_subject_id  CHAR(36)      NOT NULL,
+  created_at             DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at             DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  amended_at             DATETIME      NULL,
+  amended_by_subject_id  CHAR(36)      NULL,
+  CONSTRAINT fk_delivery_order FOREIGN KEY (order_id) REFERENCES customer_orders(id),
+  KEY idx_delivery_chain (chain_id)
+) ENGINE=InnoDB;

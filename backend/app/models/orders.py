@@ -2,19 +2,12 @@ from datetime import date, datetime
 from pydantic import BaseModel
 
 
-class OrderCreateRequest(BaseModel):
-    customer_id: int
-    product_id: int
-    quantity_kg: float
-    bag_size_kg: float = 50
-    delivery_date: date | None = None
-    priority: str = "normal"  # critical | high | normal | low
-    notes: str | None = None
-
-
 class OrderUpdateRequest(BaseModel):
+    # customer_id and product_id are deliberately absent: they are fixed at
+    # the quotation stage and never editable on an order.
     quantity_kg: float | None = None
     bag_size_kg: float | None = None
+    order_date: date | None = None
     delivery_date: date | None = None
     priority: str | None = None
     notes: str | None = None
@@ -34,6 +27,9 @@ class AvailabilityResponse(BaseModel):
 class OrderResponse(BaseModel):
     id: int
     order_no: str
+    chain_id: str | None = None
+    quotation_id: str | None = None
+    order_date: date | None = None
     customer_id: int
     customer_name: str
     product_id: int

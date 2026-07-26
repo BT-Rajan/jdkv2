@@ -67,6 +67,20 @@ REPORTS_VIEW = "reports_view"
 SETTINGS_VIEW = "settings_view"
 SETTINGS_MANAGE = "settings_manage"  # includes writing the DeepSeek API key - sensitive
 
+# --- Sales workflow: Feasibility -> Quotation -> Order -> Delivery -------------
+# SALES_ACCESS is the single gate for quotations and for creating/converting
+# orders - per docs/features, only users with sales rights may take a
+# feasibility check to a quotation or a quotation to an order.
+SALES_ACCESS = "sales_access"
+FEASIBILITY_VIEW = "feasibility_view"
+FEASIBILITY_RUN = "feasibility_run"
+DELIVERIES_VIEW = "delivery_view"
+DELIVERIES_MANAGE = "delivery_manage"
+# History correction: feasibility runs, quotations and deliveries are never
+# deletable and never freely editable once finalized - only an administrator
+# holding this permission may amend a past record.
+HISTORY_AMEND = "history_amend"
+
 # --- perennia-search integration: codes fixed by perennia-search itself --------
 SEARCH_EXECUTE = "search.execute"
 SEARCH_MANAGE = "search.manage"
@@ -106,6 +120,12 @@ PERMISSIONS: list[tuple[str, str]] = [
     (REPORTS_VIEW, "View daily status and reports"),
     (SETTINGS_VIEW, "View application settings (AI config, production parameters, company info)"),
     (SETTINGS_MANAGE, "Change application settings, including the DeepSeek API key"),
+    (SALES_ACCESS, "Access the sales workflow: quotations and order creation"),
+    (FEASIBILITY_VIEW, "View feasibility check history"),
+    (FEASIBILITY_RUN, "Run a feasibility check against a customer/product/date"),
+    (DELIVERIES_VIEW, "View deliveries"),
+    (DELIVERIES_MANAGE, "Issue and update deliveries"),
+    (HISTORY_AMEND, "Amend finalized feasibility, quotation and delivery records"),
     (SEARCH_EXECUTE, "Search across business resources"),
     (SEARCH_MANAGE, "Manage search indexes"),
     (NOTIFY_SEND, "Send and schedule notifications"),
@@ -133,7 +153,8 @@ ROLES: dict[str, dict] = {
         "description": "Business visibility and decisions",
         "permissions": [
             CUSTOMERS_VIEW, PRODUCTS_VIEW, INVENTORY_VIEW, SUPPLIERS_VIEW,
-            ORDERS_VIEW, MRP_VIEW, REPORTS_VIEW, SEARCH_EXECUTE, NOTIFY_READ,
+            ORDERS_VIEW, FEASIBILITY_VIEW, DELIVERIES_VIEW,
+            MRP_VIEW, REPORTS_VIEW, SEARCH_EXECUTE, NOTIFY_READ,
             FILE_VIEW, FILE_DOWNLOAD, USERS_VIEW, SETTINGS_VIEW,
         ],
     },
@@ -141,8 +162,20 @@ ROLES: dict[str, dict] = {
         "description": "Operational coordination",
         "permissions": [
             CUSTOMERS_VIEW, CUSTOMERS_MANAGE, PRODUCTS_VIEW, INVENTORY_VIEW,
-            SUPPLIERS_VIEW, ORDERS_VIEW, ORDERS_CREATE, ORDERS_EDIT,
+            SUPPLIERS_VIEW, ORDERS_VIEW, ORDERS_EDIT,
+            FEASIBILITY_VIEW, DELIVERIES_VIEW, DELIVERIES_MANAGE,
             MRP_VIEW, REPORTS_VIEW, SEARCH_EXECUTE, SEARCH_MANAGE, NOTIFY_SEND, NOTIFY_READ,
+            FILE_UPLOAD, FILE_VIEW, FILE_DOWNLOAD, FILE_CREATE_VERSION,
+        ],
+    },
+    "sales": {
+        "description": "Feasibility, quotations and order creation",
+        "permissions": [
+            CUSTOMERS_VIEW, PRODUCTS_VIEW, INVENTORY_VIEW,
+            ORDERS_VIEW, ORDERS_CREATE, ORDERS_EDIT,
+            SALES_ACCESS, FEASIBILITY_VIEW, FEASIBILITY_RUN,
+            DELIVERIES_VIEW, MRP_VIEW, REPORTS_VIEW,
+            SEARCH_EXECUTE, NOTIFY_SEND, NOTIFY_READ,
             FILE_UPLOAD, FILE_VIEW, FILE_DOWNLOAD, FILE_CREATE_VERSION,
         ],
     },
@@ -165,6 +198,7 @@ ROLES: dict[str, dict] = {
 
 # Roles selectable when a JDK administrator creates a new user.
 ASSIGNABLE_ROLES: list[tuple[str, str]] = [
+    ("sales", "Sales"),
     ("operations", "Operations"),
     ("production", "Production"),
     ("procurement", "Procurement"),

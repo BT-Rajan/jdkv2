@@ -28,6 +28,12 @@ export const REPORTS_VIEW = "reports_view";
 
 export const SETTINGS_VIEW = "settings_view";
 export const SETTINGS_MANAGE = "settings_manage";
+export const SALES_ACCESS = "sales_access";
+export const FEASIBILITY_VIEW = "feasibility_view";
+export const FEASIBILITY_RUN = "feasibility_run";
+export const DELIVERIES_VIEW = "delivery_view";
+export const DELIVERIES_MANAGE = "delivery_manage";
+export const HISTORY_AMEND = "history_amend";
 
 export const FILE_UPLOAD = "file.upload";
 export const FILE_VIEW = "file.view";

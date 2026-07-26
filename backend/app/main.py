@@ -13,7 +13,10 @@ from app.core.errors import AppError, resolve
 from app.core.security import settings, access, search
 from app.core.search_providers import register_all as register_search_providers
 from app.permissions import definitions as permission_definitions
-from app.api import auth, users, customers, inventory, suppliers, products, orders, mrp, reports, attachments, settings as settings_api, production
+from app.api import (
+    auth, users, customers, inventory, suppliers, products, orders, mrp, reports, attachments,
+    settings as settings_api, production, feasibility, quotations, deliveries,
+)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("jdk")
@@ -40,6 +43,9 @@ app.include_router(mrp.router)
 app.include_router(reports.router)
 app.include_router(attachments.router)
 app.include_router(settings_api.router)
+app.include_router(feasibility.router)
+app.include_router(quotations.router)
+app.include_router(deliveries.router)
 
 
 @app.on_event("startup")

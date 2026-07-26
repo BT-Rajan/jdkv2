@@ -42,13 +42,13 @@ class FeasibilityEngine:
         self._orders = order_repo
         self._mrp = mrp_engine
 
-    def assess_order(self, order_id: int) -> dict:
-        order = self._orders.get(order_id)
-        if not order:
-            raise ValueError(f"order {order_id} not found")
-
-        atp = self._mrp.available_to_promise(order["product_id"], float(order["quantity_kg"]))
-        delivery_date: date | None = order["delivery_date"]
+    def assess(self, product_id: int, quantity_kg: float, required_date: date | None) -> dict:
+        """Order-independent assessment: can `quantity_kg` of `product_id` be
+        promised (from stock or production) by `required_date`? This is what
+        the sales-workflow feasibility check (docs/features) runs before any
+        order exists - it never touches customer_orders.
+        """
+        atp = self._mrp.available_to_promise(product_id, quantity_kg)
 
         unresolvable_shortage = atp["remaining_kg"] > 0 and any(
             c.get("shortage") is not None and not c.get("supplier_lead_time_days")
@@ -59,9 +59,9 @@ class FeasibilityEngine:
             outcome = FEASIBLE
         elif unresolvable_shortage:
             outcome = NOT_FEASIBLE
-        elif delivery_date is None:
+        elif required_date is None:
             outcome = AT_RISK
-        elif atp["estimated_fulfillment_date"] <= delivery_date:
+        elif atp["estimated_fulfillment_date"] <= required_date:
             outcome = FEASIBLE
         elif atp["promptly_available_kg"] > 0:
             outcome = PARTIALLY_FEASIBLE
@@ -69,16 +69,21 @@ class FeasibilityEngine:
             outcome = FEASIBLE_ON_LATER_DATE
 
         return {
-            "order_id": order_id,
-            "order_no": order["order_no"],
             "outcome": outcome,
-            "required_date": delivery_date,
+            "required_date": required_date,
             "estimated_fulfillment_date": atp["estimated_fulfillment_date"],
             "promptly_available_kg": atp["promptly_available_kg"],
             "remaining_kg": atp["remaining_kg"],
             "requested_kg": atp["requested_kg"],
             "constraints": atp["constraints"],
         }
+
+    def assess_order(self, order_id: int) -> dict:
+        order = self._orders.get(order_id)
+        if not order:
+            raise ValueError(f"order {order_id} not found")
+        result = self.assess(order["product_id"], float(order["quantity_kg"]), order["delivery_date"])
+        return {"order_id": order_id, "order_no": order["order_no"], **result}
 
     def assess_all_open_orders(self) -> list[dict]:
         results = []

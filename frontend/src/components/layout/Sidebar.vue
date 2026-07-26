@@ -5,16 +5,20 @@ import { useUiStore } from "../../stores/ui";
 import {
   CUSTOMERS_VIEW, INVENTORY_VIEW, SUPPLIERS_VIEW, PRODUCTS_VIEW,
   ORDERS_VIEW, MRP_VIEW, REPORTS_VIEW, USERS_VIEW, SETTINGS_VIEW,
+  FEASIBILITY_VIEW, SALES_ACCESS, DELIVERIES_VIEW,
 } from "../../permissions";
 
 const auth = useAuthStore();
 const ui = useUiStore();
 
-interface NavItem { to: string; label: string; icon: string; permission?: string; }
+interface NavItem { to: string; label: string; icon: string; permission?: string; section?: string; }
 
 const items: NavItem[] = [
   { to: "/", label: "Dashboard", icon: "▤", permission: REPORTS_VIEW },
-  { to: "/orders", label: "Customer Orders", icon: "▥", permission: ORDERS_VIEW },
+  { to: "/feasibility", label: "Feasibility", icon: "◔", permission: FEASIBILITY_VIEW, section: "Order" },
+  { to: "/quotations", label: "Quotations", icon: "▧", permission: SALES_ACCESS, section: "Order" },
+  { to: "/orders", label: "Orders", icon: "▥", permission: ORDERS_VIEW, section: "Order" },
+  { to: "/deliveries", label: "Deliveries", icon: "▨", permission: DELIVERIES_VIEW, section: "Order" },
   { to: "/customers", label: "Customers", icon: "◈", permission: CUSTOMERS_VIEW },
   { to: "/products", label: "Products & Formulas", icon: "◫", permission: PRODUCTS_VIEW },
   { to: "/materials", label: "Materials & Inventory", icon: "▦", permission: INVENTORY_VIEW },
@@ -34,16 +38,15 @@ const visibleItems = computed(() => items.filter((i) => !i.permission || auth.ha
       <span v-if="!ui.sidebarCollapsed" class="brand-name">JDK</span>
     </div>
     <nav class="nav">
-      <router-link
-        v-for="item in visibleItems"
-        :key="item.to"
-        :to="item.to"
-        class="nav-item"
-        active-class="active"
-      >
-        <span class="nav-icon">{{ item.icon }}</span>
-        <span v-if="!ui.sidebarCollapsed" class="nav-label">{{ item.label }}</span>
-      </router-link>
+      <template v-for="(item, idx) in visibleItems" :key="item.to">
+        <div v-if="item.section && !ui.sidebarCollapsed && visibleItems[idx - 1]?.section !== item.section" class="nav-section">
+          {{ item.section }}
+        </div>
+        <router-link :to="item.to" class="nav-item" active-class="active">
+          <span class="nav-icon">{{ item.icon }}</span>
+          <span v-if="!ui.sidebarCollapsed" class="nav-label">{{ item.label }}</span>
+        </router-link>
+      </template>
     </nav>
     <button class="collapse-btn" @click="ui.toggleSidebar" :aria-label="ui.sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'">
       {{ ui.sidebarCollapsed ? "»" : "«" }}
@@ -95,6 +98,13 @@ const visibleItems = computed(() => items.filter((i) => !i.permission || auth.ha
 .nav-item:hover { background: rgba(255,255,255,0.06); text-decoration: none; }
 .nav-item.active { background: var(--color-primary-500); color: white; }
 .nav-icon { width: 20px; text-align: center; }
+.nav-section {
+  padding: 10px 12px 2px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-neutral-500);
+}
 
 .collapse-btn {
   margin: var(--space-3);

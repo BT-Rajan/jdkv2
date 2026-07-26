@@ -3,6 +3,7 @@ import { useAuthStore } from "../stores/auth";
 import {
   CUSTOMERS_VIEW, INVENTORY_VIEW, SUPPLIERS_VIEW, PRODUCTS_VIEW,
   ORDERS_VIEW, MRP_VIEW, REPORTS_VIEW, USERS_VIEW, SETTINGS_VIEW,
+  FEASIBILITY_VIEW, SALES_ACCESS, DELIVERIES_VIEW,
 } from "../permissions";
 
 const routes: RouteRecordRaw[] = [
@@ -54,8 +55,12 @@ const routes: RouteRecordRaw[] = [
       { path: "products", name: "products", component: () => import("../pages/products/ProductsListPage.vue"), meta: { permission: PRODUCTS_VIEW } },
       { path: "products/:id", name: "product-detail", component: () => import("../pages/products/ProductDetailPage.vue"), meta: { permission: PRODUCTS_VIEW } },
 
+      { path: "feasibility", name: "feasibility", component: () => import("../pages/sales/FeasibilityPage.vue"), meta: { permission: FEASIBILITY_VIEW } },
+      { path: "quotations", name: "quotations", component: () => import("../pages/sales/QuotationsListPage.vue"), meta: { permission: SALES_ACCESS } },
+      { path: "quotations/:id", name: "quotation-detail", component: () => import("../pages/sales/QuotationDetailPage.vue"), meta: { permission: SALES_ACCESS } },
       { path: "orders", name: "orders", component: () => import("../pages/orders/OrdersListPage.vue"), meta: { permission: ORDERS_VIEW } },
       { path: "orders/:id", name: "order-detail", component: () => import("../pages/orders/OrderDetailPage.vue"), meta: { permission: ORDERS_VIEW } },
+      { path: "deliveries", name: "deliveries", component: () => import("../pages/sales/DeliveriesListPage.vue"), meta: { permission: DELIVERIES_VIEW } },
 
       { path: "mrp", name: "mrp", component: () => import("../pages/mrp/MrpPage.vue"), meta: { permission: MRP_VIEW } },
 

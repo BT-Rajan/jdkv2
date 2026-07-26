@@ -48,12 +48,16 @@ function prevPage() {
       <thead>
         <tr>
           <th v-for="col in columns" :key="col.key" :class="{ numeric: col.numeric }">{{ col.label }}</th>
+          <th v-if="$slots.actions"></th>
         </tr>
       </thead>
       <tbody>
         <tr v-for="(row, i) in rows" :key="row.id ?? row.subject_id ?? i" @click="emit('row-click', row)">
           <td v-for="col in columns" :key="col.key" :class="{ numeric: col.numeric }">
             {{ cell(row, col) }}
+          </td>
+          <td v-if="$slots.actions" class="row" style="gap: var(--space-2)" @click.stop>
+            <slot name="actions" :row="row" />
           </td>
         </tr>
       </tbody>

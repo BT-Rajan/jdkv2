@@ -3,10 +3,10 @@ import { computed } from "vue";
 
 const props = defineProps<{ status: string }>();
 
-const SUCCESS = new Set(["active", "fulfilled", "confirmed", "completed", "feasible"]);
-const WARNING = new Set(["pending", "draft", "planned", "partially_fulfilled", "at_risk", "partially_feasible", "feasible_on_later_date"]);
-const DANGER = new Set(["inactive", "cancelled", "delayed", "not_feasible", "locked", "suspended"]);
-const INFO = new Set(["in_progress", "in_production", "shipped", "ready"]);
+const SUCCESS = new Set(["active", "fulfilled", "confirmed", "completed", "feasible", "accepted", "delivered", "converted"]);
+const WARNING = new Set(["pending", "draft", "planned", "partially_fulfilled", "at_risk", "partially_feasible", "feasible_on_later_date", "sent", "scheduled"]);
+const DANGER = new Set(["inactive", "cancelled", "delayed", "not_feasible", "locked", "suspended", "rejected", "expired"]);
+const INFO = new Set(["in_progress", "in_production", "shipped", "ready", "dispatched", "open"]);
 
 const variant = computed(() => {
   const s = props.status?.toLowerCase();

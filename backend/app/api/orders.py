@@ -9,9 +9,9 @@ from app.domain.orders.repository import OrderRepository
 from app.domain.orders.service import OrderService
 from app.domain.products.repository import ProductRepository
 from app.domain.customers.repository import CustomerRepository
-from app.permissions.definitions import ORDERS_VIEW, ORDERS_CREATE, ORDERS_EDIT, ORDERS_DELETE
+from app.permissions.definitions import ORDERS_VIEW, ORDERS_EDIT, ORDERS_DELETE
 from app.models.orders import (
-    OrderCreateRequest, OrderUpdateRequest, OrderStatusRequest,
+    OrderUpdateRequest, OrderStatusRequest,
     OrderResponse, OrderListResponse, AvailabilityResponse,
 )
 
@@ -46,14 +46,6 @@ def check_availability(product_id: int, quantity_kg: float,
 @router.get("/{order_id}", response_model=OrderResponse)
 def get_order(order_id: int, identity: AuthenticatedIdentity = Depends(require_permission(ORDERS_VIEW))):
     return OrderResponse(**_service.get(order_id))
-
-
-@router.post("", response_model=OrderResponse)
-def create_order(body: OrderCreateRequest, identity: AuthenticatedIdentity = Depends(require_permission(ORDERS_CREATE))):
-    return OrderResponse(**_service.create(
-        identity, body.customer_id, body.product_id, body.quantity_kg,
-        body.bag_size_kg, body.delivery_date, body.priority, body.notes,
-    ))
 
 
 @router.patch("/{order_id}", response_model=OrderResponse)

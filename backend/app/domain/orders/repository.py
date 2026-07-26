@@ -24,19 +24,20 @@ class OrderRepository:
 
     def create(self, customer_id: int, product_id: int, quantity_kg: float,
                bag_size_kg: float, delivery_date, priority: str, notes: str | None,
-               created_by_subject_id: str) -> int:
+               created_by_subject_id: str, chain_id: str | None = None,
+               quotation_id: str | None = None, order_date=None) -> int:
         with self._db.transaction() as cur:
             order_no = self._next_order_no(cur)
             bags = int(quantity_kg // bag_size_kg) if bag_size_kg else 0
             cur.execute(
                 """
                 INSERT INTO customer_orders
-                    (order_no, customer_id, product_id, quantity_kg, bag_size_kg, bags,
-                     delivery_date, priority, notes, created_by_subject_id)
-                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                    (order_no, chain_id, quotation_id, order_date, customer_id, product_id,
+                     quantity_kg, bag_size_kg, bags, delivery_date, priority, notes, created_by_subject_id)
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
                 """,
-                (order_no, customer_id, product_id, quantity_kg, bag_size_kg, bags,
-                 delivery_date, priority, notes, created_by_subject_id),
+                (order_no, chain_id, quotation_id, order_date, customer_id, product_id,
+                 quantity_kg, bag_size_kg, bags, delivery_date, priority, notes, created_by_subject_id),
             )
             return cur.lastrowid
 
@@ -55,11 +56,22 @@ class OrderRepository:
             return cur.fetchone()
 
     def update(self, order_id: int, data: dict) -> None:
+        # customer_id and product_id are intentionally absent here and from
+        # every caller's payload model - they never change once an order
+        # exists (the chain's identity is fixed at the quotation stage).
         fields, params = [], []
-        for col in ("quantity_kg", "bag_size_kg", "bags", "delivery_date", "priority", "notes"):
+        for col in ("quantity_kg", "bag_size_kg", "order_date", "delivery_date", "priority", "notes"):
             if col in data:
                 fields.append(f"{col} = %s")
                 params.append(data[col])
+        if "quantity_kg" in data or "bag_size_kg" in data:
+            with self._db.cursor() as cur:
+                cur.execute("SELECT quantity_kg, bag_size_kg FROM customer_orders WHERE id = %s", (order_id,))
+                current = cur.fetchone() or {}
+            quantity_kg = data.get("quantity_kg", float(current.get("quantity_kg", 0)))
+            bag_size_kg = data.get("bag_size_kg", float(current.get("bag_size_kg", 0)))
+            fields.append("bags = %s")
+            params.append(int(quantity_kg // bag_size_kg) if bag_size_kg else 0)
         if not fields:
             return
         params.append(order_id)

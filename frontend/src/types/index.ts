@@ -178,6 +178,9 @@ export interface Availability {
 export interface Order {
   id: number;
   order_no: string;
+  chain_id: string | null;
+  quotation_id: string | null;
+  order_date: string | null;
   customer_id: number;
   customer_name: string;
   product_id: number;
@@ -198,6 +201,77 @@ export const ORDER_STATUSES = [
   "draft", "confirmed", "planned", "partially_fulfilled",
   "fulfilled", "at_risk", "delayed", "cancelled",
 ] as const;
+
+// ── Sales workflow: Feasibility -> Quotation -> Order -> Delivery ─────────
+export interface FeasibilityConstraint {
+  material_id: number | null;
+  material_name: string | null;
+  shortage: number | null;
+  supplier_lead_time_days: number | null;
+}
+
+export interface FeasibilityRun {
+  id: string;
+  chain_id: string;
+  customer_id: number;
+  customer_name: string;
+  product_id: number;
+  product_name: string;
+  quantity_kg: number;
+  requested_delivery_date: string;
+  outcome: "feasible" | "partially_feasible" | "feasible_on_later_date" | "at_risk" | "not_feasible";
+  estimated_fulfillment_date: string | null;
+  promptly_available_kg: number;
+  remaining_kg: number;
+  constraints: FeasibilityConstraint[];
+  status: "open" | "converted" | "superseded";
+  notes: string | null;
+  created_at: string;
+  can_generate_quotation: boolean;
+}
+
+export const FEASIBILITY_OUTCOMES = [
+  "feasible", "partially_feasible", "feasible_on_later_date", "at_risk", "not_feasible",
+] as const;
+
+export interface Quotation {
+  id: string;
+  chain_id: string;
+  feasibility_id: string;
+  quote_no: string;
+  customer_id: number;
+  customer_name: string;
+  product_id: number;
+  product_name: string;
+  quantity_kg: number;
+  unit_price: number;
+  total_amount: number;
+  quote_date: string;
+  valid_until: string | null;
+  requested_delivery_date: string;
+  terms: string | null;
+  notes: string | null;
+  status: "draft" | "sent" | "accepted" | "rejected" | "expired" | "converted";
+  created_at: string;
+  updated_at: string;
+  can_convert_to_order: boolean;
+}
+
+export interface Delivery {
+  id: string;
+  chain_id: string;
+  order_id: number;
+  order_no: string;
+  delivery_no: string;
+  delivery_date: string;
+  dispatched_qty_kg: number;
+  carrier: string | null;
+  tracking_ref: string | null;
+  status: "scheduled" | "dispatched" | "delivered" | "cancelled";
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
 
 // ── MRP / ATP ─────────────────────────────────────────────────────────────
 export interface ContributingOrder {
