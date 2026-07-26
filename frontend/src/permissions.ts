@@ -26,6 +26,8 @@ export const MRP_EXECUTE = "mrp_execute";
 
 export const REPORTS_VIEW = "reports_view";
 
+export const CHAT_USE = "chat_use";
+
 export const FILE_UPLOAD = "file.upload";
 export const FILE_VIEW = "file.view";
 export const FILE_DELETE = "file.delete";

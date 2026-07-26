@@ -63,6 +63,9 @@ MRP_EXECUTE = "mrp_execute"
 # --- Daily Status & Reports -----------------------------------------------------
 REPORTS_VIEW = "reports_view"
 
+# --- AI Factory Assistant -----------------------------------------------------
+CHAT_USE = "chat_use"
+
 # --- perennia-search integration: codes fixed by perennia-search itself --------
 SEARCH_EXECUTE = "search.execute"
 SEARCH_MANAGE = "search.manage"
@@ -100,6 +103,7 @@ PERMISSIONS: list[tuple[str, str]] = [
     (MRP_VIEW, "View MRP / ATP analysis"),
     (MRP_EXECUTE, "Run MRP calculations"),
     (REPORTS_VIEW, "View daily status and reports"),
+    (CHAT_USE, "Use the AI factory assistant"),
     (SEARCH_EXECUTE, "Search across business resources"),
     (SEARCH_MANAGE, "Manage search indexes"),
     (NOTIFY_SEND, "Send and schedule notifications"),
@@ -127,7 +131,7 @@ ROLES: dict[str, dict] = {
         "description": "Business visibility and decisions",
         "permissions": [
             CUSTOMERS_VIEW, PRODUCTS_VIEW, INVENTORY_VIEW, SUPPLIERS_VIEW,
-            ORDERS_VIEW, MRP_VIEW, REPORTS_VIEW, SEARCH_EXECUTE, NOTIFY_READ,
+            ORDERS_VIEW, MRP_VIEW, REPORTS_VIEW, CHAT_USE, SEARCH_EXECUTE, NOTIFY_READ,
             FILE_VIEW, FILE_DOWNLOAD, USERS_VIEW,
         ],
     },
@@ -136,7 +140,7 @@ ROLES: dict[str, dict] = {
         "permissions": [
             CUSTOMERS_VIEW, CUSTOMERS_MANAGE, PRODUCTS_VIEW, INVENTORY_VIEW,
             SUPPLIERS_VIEW, ORDERS_VIEW, ORDERS_CREATE, ORDERS_EDIT,
-            MRP_VIEW, REPORTS_VIEW, SEARCH_EXECUTE, SEARCH_MANAGE, NOTIFY_SEND, NOTIFY_READ,
+            MRP_VIEW, REPORTS_VIEW, CHAT_USE, SEARCH_EXECUTE, SEARCH_MANAGE, NOTIFY_SEND, NOTIFY_READ,
             FILE_UPLOAD, FILE_VIEW, FILE_DOWNLOAD, FILE_CREATE_VERSION,
         ],
     },
@@ -144,14 +148,14 @@ ROLES: dict[str, dict] = {
         "description": "Production activities",
         "permissions": [
             PRODUCTS_VIEW, INVENTORY_VIEW, ORDERS_VIEW, MRP_VIEW, MRP_EXECUTE,
-            REPORTS_VIEW, SEARCH_EXECUTE, NOTIFY_READ, FILE_VIEW, FILE_DOWNLOAD,
+            REPORTS_VIEW, CHAT_USE, SEARCH_EXECUTE, NOTIFY_READ, FILE_VIEW, FILE_DOWNLOAD,
         ],
     },
     "procurement": {
         "description": "Supplier and material activities",
         "permissions": [
             SUPPLIERS_VIEW, SUPPLIERS_MANAGE, INVENTORY_VIEW, INVENTORY_ADJUST,
-            PRODUCTS_VIEW, MRP_VIEW, REPORTS_VIEW, SEARCH_EXECUTE, SEARCH_MANAGE, NOTIFY_READ,
+            PRODUCTS_VIEW, MRP_VIEW, REPORTS_VIEW, CHAT_USE, SEARCH_EXECUTE, SEARCH_MANAGE, NOTIFY_READ,
             FILE_UPLOAD, FILE_VIEW, FILE_DOWNLOAD,
         ],
     },

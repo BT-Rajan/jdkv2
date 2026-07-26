@@ -2,7 +2,7 @@ import { createRouter, createWebHistory, type RouteRecordRaw } from "vue-router"
 import { useAuthStore } from "../stores/auth";
 import {
   CUSTOMERS_VIEW, INVENTORY_VIEW, SUPPLIERS_VIEW, PRODUCTS_VIEW,
-  ORDERS_VIEW, MRP_VIEW, REPORTS_VIEW, USERS_VIEW,
+  ORDERS_VIEW, MRP_VIEW, REPORTS_VIEW, USERS_VIEW, CHAT_USE,
 } from "../permissions";
 
 const routes: RouteRecordRaw[] = [
@@ -58,6 +58,8 @@ const routes: RouteRecordRaw[] = [
       { path: "orders/:id", name: "order-detail", component: () => import("../pages/orders/OrderDetailPage.vue"), meta: { permission: ORDERS_VIEW } },
 
       { path: "mrp", name: "mrp", component: () => import("../pages/mrp/MrpPage.vue"), meta: { permission: MRP_VIEW } },
+
+      { path: "chat", name: "chat", component: () => import("../pages/ChatPage.vue"), meta: { permission: CHAT_USE } },
 
       { path: "users", name: "users", component: () => import("../pages/users/UsersListPage.vue"), meta: { permission: USERS_VIEW } },
       { path: "users/:id", name: "user-detail", component: () => import("../pages/users/UserDetailPage.vue"), meta: { permission: USERS_VIEW } },

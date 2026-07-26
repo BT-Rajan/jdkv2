@@ -282,6 +282,23 @@ export interface Attachment {
   created_at: string;
 }
 
+// ── Chat ──────────────────────────────────────────────────────────────────
+export interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
+export interface ChatAction {
+  action: string;
+  page?: string;
+  [key: string]: unknown;
+}
+
+export interface ChatReply {
+  reply: string;
+  action: ChatAction | null;
+}
+
 // ── Generic list envelope ─────────────────────────────────────────────────
 export interface ListResponse<T> {
   total: number;

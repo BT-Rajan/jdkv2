@@ -24,6 +24,7 @@ APP_ERROR_CATALOG: dict[str, ErrorSpec] = {
     "validation_error": ErrorSpec(422, "Please check the information you entered."),
     "not_found": ErrorSpec(404, "The requested resource was not found."),
     "conflict": ErrorSpec(409, "This action conflicts with the current state of the record."),
+    "chat_upstream_error": ErrorSpec(502, "The AI assistant is temporarily unavailable. Please try again shortly."),
     "http_error": ErrorSpec(400, "Request could not be processed."),
     "internal_error": ErrorSpec(500, "Something went wrong on our end. Please try again shortly."),
 }

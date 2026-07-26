@@ -55,6 +55,12 @@ class Settings:
     default_admin_email: str
     default_admin_password: str
 
+    # AI Factory Assistant (DeepSeek). Optional - the assistant degrades to a
+    # "not configured" reply rather than failing startup when unset.
+    deepseek_api_key: str
+    deepseek_base_url: str
+    deepseek_model: str
+
 
 def load_settings() -> Settings:
     signing_secret = os.getenv("AUTH_SIGNING_SECRET", "")
@@ -106,4 +112,7 @@ def load_settings() -> Settings:
         default_admin_password=os.getenv("DEFAULT_ADMIN_PASSWORD", ""),
         sentinel_service_url=os.getenv("SENTINEL_SERVICE_URL", "http://localhost:4000"),
         sentinel_client_key=sentinel_client_key,
+        deepseek_api_key=os.getenv("DEEPSEEK_API_KEY", "").strip(),
+        deepseek_base_url=os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com").rstrip("/"),
+        deepseek_model=os.getenv("DEEPSEEK_MODEL", "deepseek-chat"),
     )
