@@ -24,7 +24,7 @@ const columns: Column<Customer>[] = [
   { key: "name", label: "Name" },
   { key: "contact_person", label: "Contact" },
   { key: "phone", label: "Phone" },
-  { key: "credit_limit", label: "Credit Limit", numeric: true, render: (r) => `₹${r.credit_limit.toLocaleString()}` },
+  { key: "credit_limit", label: "Credit Limit", numeric: true, render: (r) => `${r.credit_limit.toLocaleString()} KWD` },
   { key: "status", label: "Status" },
 ];
 
@@ -44,7 +44,11 @@ onMounted(load);
 watch(search, () => { offset.value = 0; load(); });
 
 const showCreate = ref(false);
-const form = reactive({ name: "", contact_person: "", email: "", phone: "", credit_limit: 0 });
+const form = reactive({
+  name: "", client_type: "", contact_person: "", phone: "", email: "",
+  delivery_address: "", billing_address: "", tax_id: "", payment_terms: "",
+  credit_limit: 0, notes: "",
+});
 const saving = ref(false);
 
 async function submitCreate() {
@@ -53,7 +57,11 @@ async function submitCreate() {
     const created = await customersApi.create(form);
     ui.toast("Customer created.", "success");
     showCreate.value = false;
-    Object.assign(form, { name: "", contact_person: "", email: "", phone: "", credit_limit: 0 });
+    Object.assign(form, {
+      name: "", client_type: "", contact_person: "", phone: "", email: "",
+      delivery_address: "", billing_address: "", tax_id: "", payment_terms: "",
+      credit_limit: 0, notes: "",
+    });
     router.push(`/customers/${created.id}`);
   } catch (e: any) {
     ui.toast(e.message || "Couldn't create customer.", "error");
@@ -90,20 +98,35 @@ async function submitCreate() {
       </div>
     </div>
 
-    <Modal v-if="showCreate" title="New Customer" @close="showCreate = false">
+    <Modal v-if="showCreate" title="New Customer" wide @close="showCreate = false">
       <form class="stack" @submit.prevent="submitCreate">
         <div class="form-grid">
-          <div class="field"><label>Name *</label><input v-model="form.name" class="input" required /></div>
-          <div class="field"><label>Contact person</label><input v-model="form.contact_person" class="input" /></div>
-          <div class="field"><label>Email</label><input v-model="form.email" type="email" class="input" /></div>
+          <div class="field"><label>Client Name *</label><input v-model="form.name" class="input" required /></div>
+          <div class="field"><label>Type</label><input v-model="form.client_type" class="input" /></div>
+          <div class="field"><label>Contact Person</label><input v-model="form.contact_person" class="input" placeholder="Contact name" /></div>
           <div class="field"><label>Phone</label><input v-model="form.phone" class="input" /></div>
-          <div class="field"><label>Credit limit</label><input v-model.number="form.credit_limit" type="number" class="input" /></div>
+          <div class="field"><label>Email</label><input v-model="form.email" type="email" class="input" /></div>
+          <div class="field"><label>Tax-id</label><input v-model="form.tax_id" class="input" /></div>
+          <div class="field"><label>Payment Terms</label><input v-model="form.payment_terms" class="input" /></div>
+          <div class="field"><label>Credit Limit (KWD)</label><input v-model.number="form.credit_limit" type="number" class="input" /></div>
+          <div class="field" style="grid-column:1/-1">
+            <label>Delivery Address</label>
+            <textarea v-model="form.delivery_address" class="input" rows="2" placeholder="Delivery site address" />
+          </div>
+          <div class="field" style="grid-column:1/-1">
+            <label>Billing Address</label>
+            <textarea v-model="form.billing_address" class="input" rows="2" placeholder="Leave blank if same as delivery" />
+          </div>
+          <div class="field" style="grid-column:1/-1">
+            <label>Notes</label>
+            <textarea v-model="form.notes" class="input" rows="2" placeholder="Internal notes about this client" />
+          </div>
         </div>
       </form>
       <template #footer>
         <button class="btn btn-secondary" @click="showCreate = false">Cancel</button>
         <button class="btn btn-primary" :disabled="saving || !form.name" @click="submitCreate">
-          {{ saving ? "Creating…" : "Create Customer" }}
+          {{ saving ? "Adding…" : "Add Client" }}
         </button>
       </template>
     </Modal>

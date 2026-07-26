@@ -4,6 +4,9 @@
 export const USERS_VIEW = "users_view";
 export const USERS_MANAGE = "users_manage";
 
+export const EMPLOYEES_VIEW = "employee_view";
+export const EMPLOYEES_MANAGE = "employee_manage";
+
 export const CUSTOMERS_VIEW = "customer_view";
 export const CUSTOMERS_MANAGE = "customer_manage";
 

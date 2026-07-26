@@ -14,7 +14,8 @@ class CustomerSearchProvider(SearchProvider):
             raise ValueError(f"customer {entity_id} not found")
         content = " ".join(filter(None, [
             customer.get("contact_person"), customer.get("email"),
-            customer.get("phone"), customer.get("address"), customer.get("gstin"),
+            customer.get("phone"), customer.get("delivery_address"),
+            customer.get("billing_address"), customer.get("tax_id"),
         ]))
         return ProviderDocument(
             title=customer["name"],

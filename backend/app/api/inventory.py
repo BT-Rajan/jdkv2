@@ -41,7 +41,11 @@ def get_material(material_id: int, identity: AuthenticatedIdentity = Depends(req
 
 @router.post("", response_model=MaterialResponse)
 def create_material(body: MaterialCreateRequest, identity: AuthenticatedIdentity = Depends(require_permission(INVENTORY_ADJUST))):
-    return MaterialResponse(**_service.create_material(identity, body.name, body.unit))
+    return MaterialResponse(**_service.create_material(
+        identity, body.name, body.unit, body.shelf_life_days, body.default_supplier_id,
+        body.minimum_stock, body.reorder_point, body.lead_time_days,
+        body.initial_receipt.model_dump() if body.initial_receipt else None,
+    ))
 
 
 @router.patch("/{material_id}/reorder-config", response_model=MaterialResponse)

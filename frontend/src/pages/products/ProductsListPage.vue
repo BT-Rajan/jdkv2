@@ -90,15 +90,15 @@ async function submitCreate() {
 
     <Modal v-if="showCreate" title="New Product" @close="showCreate = false">
       <div class="form-grid">
-        <div class="field"><label>Name *</label><input v-model="form.name" class="input" required /></div>
+        <div class="field"><label>Product Name *</label><input v-model="form.name" class="input" required /></div>
         <div class="field"><label>Category</label><input v-model="form.category" class="input" /></div>
         <div class="field"><label>Unit of measure</label><input v-model="form.unit_of_measure" class="input" /></div>
-        <div class="field"><label>Default bag size (kg)</label><input v-model.number="form.default_bag_size_kg" type="number" class="input" /></div>
+        <div class="field"><label>Bag Size (kg)</label><input v-model.number="form.default_bag_size_kg" type="number" class="input" /></div>
       </div>
       <template #footer>
         <button class="btn btn-secondary" @click="showCreate = false">Cancel</button>
         <button class="btn btn-primary" :disabled="saving || !form.name" @click="submitCreate">
-          {{ saving ? "Creating…" : "Create Product" }}
+          {{ saving ? "Adding…" : "Add Product" }}
         </button>
       </template>
     </Modal>

@@ -34,6 +34,10 @@ SYSTEM_IDENTITY = AuthenticatedIdentity(subject_id=SYSTEM_SUBJECT_ID, session_id
 USERS_VIEW = "users_view"
 USERS_MANAGE = "users_manage"  # create, update, promote/demote, deactivate
 
+# --- Employees (HR directory - distinct from Users/login above) --------------
+EMPLOYEES_VIEW = "employee_view"
+EMPLOYEES_MANAGE = "employee_manage"
+
 # --- Customers ---------------------------------------------------------------
 CUSTOMERS_VIEW = "customer_view"
 CUSTOMERS_MANAGE = "customer_manage"
@@ -103,6 +107,8 @@ FILE_AI = "file.ai"
 PERMISSIONS: list[tuple[str, str]] = [
     (USERS_VIEW, "View JDK user accounts"),
     (USERS_MANAGE, "Create, update, promote/demote and deactivate JDK users"),
+    (EMPLOYEES_VIEW, "View employee directory records"),
+    (EMPLOYEES_MANAGE, "Create and edit employee directory records"),
     (CUSTOMERS_VIEW, "View customer records"),
     (CUSTOMERS_MANAGE, "Create and edit customer records"),
     (PRODUCTS_VIEW, "View products and their formulas"),
@@ -155,7 +161,7 @@ ROLES: dict[str, dict] = {
             CUSTOMERS_VIEW, PRODUCTS_VIEW, INVENTORY_VIEW, SUPPLIERS_VIEW,
             ORDERS_VIEW, FEASIBILITY_VIEW, DELIVERIES_VIEW,
             MRP_VIEW, REPORTS_VIEW, SEARCH_EXECUTE, NOTIFY_READ,
-            FILE_VIEW, FILE_DOWNLOAD, USERS_VIEW, SETTINGS_VIEW,
+            FILE_VIEW, FILE_DOWNLOAD, USERS_VIEW, SETTINGS_VIEW, EMPLOYEES_VIEW,
         ],
     },
     "operations": {
@@ -166,6 +172,7 @@ ROLES: dict[str, dict] = {
             FEASIBILITY_VIEW, DELIVERIES_VIEW, DELIVERIES_MANAGE,
             MRP_VIEW, REPORTS_VIEW, SEARCH_EXECUTE, SEARCH_MANAGE, NOTIFY_SEND, NOTIFY_READ,
             FILE_UPLOAD, FILE_VIEW, FILE_DOWNLOAD, FILE_CREATE_VERSION,
+            EMPLOYEES_VIEW, EMPLOYEES_MANAGE,
         ],
     },
     "sales": {

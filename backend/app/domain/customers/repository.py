@@ -1,49 +1,44 @@
+"""Customer persistence.
+
+Create/get/update run through perennia-crud's CrudEngine (see schema.py) -
+that's the "perennia-crud rebuild" for this entity. The OR-across-columns
+keyword search and the order-history join aren't expressible through
+perennia-crud's ListQuery (AND-only, single table), so those two stay as
+direct SQL against JDK's own Database wrapper, same as before.
+"""
+from perennia_crud import CrudEngine
+from perennia_crud.exceptions import RecordNotFoundError
+
+from app.core.config import load_settings
+from app.core.crud_config import build_crud_config
 from app.core.database import Database
+from app.domain.customers.schema import CUSTOMER_SCHEMA
+
+_engine = CrudEngine(build_crud_config(load_settings()), CUSTOMER_SCHEMA)
 
 
 class CustomerRepository:
     def __init__(self, db: Database):
         self._db = db
+        self._engine = _engine
 
     def create(self, data: dict) -> int:
-        with self._db.transaction() as cur:
-            cur.execute(
-                """
-                INSERT INTO customers
-                    (name, contact_person, email, phone, address, billing_address,
-                     gstin, payment_terms, credit_limit, notes)
-                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
-                """,
-                (
-                    data["name"], data.get("contact_person"), data.get("email"),
-                    data.get("phone"), data.get("address"), data.get("billing_address"),
-                    data.get("gstin"), data.get("payment_terms"),
-                    data.get("credit_limit", 0), data.get("notes"),
-                ),
-            )
-            return cur.lastrowid
+        record = self._engine.create(data)
+        return record["id"]
 
     def update(self, customer_id: int, data: dict) -> None:
-        fields, params = [], []
-        for col in ("name", "contact_person", "email", "phone", "address", "billing_address",
-                    "gstin", "payment_terms", "credit_limit", "notes"):
-            if col in data:
-                fields.append(f"{col} = %s")
-                params.append(data[col])
-        if not fields:
+        if not data:
             return
-        params.append(customer_id)
-        with self._db.transaction() as cur:
-            cur.execute(f"UPDATE customers SET {', '.join(fields)} WHERE id = %s", params)
+        self._engine.update(customer_id, data)
 
     def deactivate(self, customer_id: int) -> None:
-        with self._db.transaction() as cur:
-            cur.execute("UPDATE customers SET status = 'inactive' WHERE id = %s", (customer_id,))
+        self._engine.update(customer_id, {"status": "inactive"})
 
     def get(self, customer_id: int) -> dict | None:
-        with self._db.cursor() as cur:
-            cur.execute("SELECT * FROM customers WHERE id = %s", (customer_id,))
-            return cur.fetchone()
+        try:
+            return self._engine.get(customer_id)
+        except RecordNotFoundError:
+            return None
 
     def search(self, keyword: str | None, status: str | None, limit: int, offset: int) -> tuple[list[dict], int]:
         clauses, params = [], []

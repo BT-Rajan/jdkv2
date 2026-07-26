@@ -40,7 +40,7 @@ async function load() {
 onMounted(load);
 
 const showEdit = ref(false);
-const editForm = reactive({ name: "", contact_person: "", phone: "", email: "", category: "", gstin: "", notes: "" });
+const editForm = reactive({ name: "", contact_person: "", phone: "", email: "", address: "", category: "", tax_id: "", rating: null as number | null, notes: "" });
 function openEdit() {
   if (!supplier.value) return;
   Object.assign(editForm, supplier.value);
@@ -116,8 +116,10 @@ async function submitSupplyTerms() {
         <div><div class="text-xs muted">Contact person</div><div>{{ supplier.contact_person || "—" }}</div></div>
         <div><div class="text-xs muted">Phone</div><div>{{ supplier.phone || "—" }}</div></div>
         <div><div class="text-xs muted">Email</div><div>{{ supplier.email || "—" }}</div></div>
-        <div><div class="text-xs muted">GSTIN</div><div>{{ supplier.gstin || "—" }}</div></div>
+        <div><div class="text-xs muted">Tax ID</div><div>{{ supplier.tax_id || "—" }}</div></div>
         <div><div class="text-xs muted">Rating</div><div>{{ supplier.rating ? "★".repeat(supplier.rating) : "—" }}</div></div>
+        <div style="grid-column: 1 / -1"><div class="text-xs muted">Address</div><div>{{ supplier.address || "—" }}</div></div>
+        <div style="grid-column: 1 / -1" v-if="supplier.notes"><div class="text-xs muted">Notes</div><div>{{ supplier.notes }}</div></div>
       </div>
     </div>
 
@@ -147,14 +149,29 @@ async function submitSupplyTerms() {
 
     <AttachmentsPanel entity-type="supplier" :entity-id="id" />
 
-    <Modal v-if="showEdit" title="Edit Supplier" @close="showEdit = false">
+    <Modal v-if="showEdit" title="Edit Supplier" wide @close="showEdit = false">
       <div class="form-grid">
-        <div class="field"><label>Name</label><input v-model="editForm.name" class="input" /></div>
+        <div class="field"><label>Supplier Name</label><input v-model="editForm.name" class="input" /></div>
         <div class="field"><label>Category</label><input v-model="editForm.category" class="input" /></div>
-        <div class="field"><label>Contact person</label><input v-model="editForm.contact_person" class="input" /></div>
+        <div class="field"><label>Contact Person</label><input v-model="editForm.contact_person" class="input" placeholder="Contact name" /></div>
         <div class="field"><label>Phone</label><input v-model="editForm.phone" class="input" /></div>
         <div class="field"><label>Email</label><input v-model="editForm.email" class="input" /></div>
-        <div class="field"><label>GSTIN</label><input v-model="editForm.gstin" class="input" /></div>
+        <div class="field"><label>TAX-ID</label><input v-model="editForm.tax_id" class="input" /></div>
+        <div class="field">
+          <label>Rating</label>
+          <select v-model.number="editForm.rating" class="input">
+            <option :value="null">—</option>
+            <option v-for="n in [1,2,3,4,5]" :key="n" :value="n">{{ n }}</option>
+          </select>
+        </div>
+        <div class="field" style="grid-column:1/-1">
+          <label>Address</label>
+          <textarea v-model="editForm.address" class="input" rows="2" placeholder="Vendor address" />
+        </div>
+        <div class="field" style="grid-column:1/-1">
+          <label>Notes</label>
+          <textarea v-model="editForm.notes" class="input" rows="2" placeholder="Internal notes about this supplier" />
+        </div>
       </div>
       <template #footer>
         <button class="btn btn-secondary" @click="showEdit = false">Cancel</button>

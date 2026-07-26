@@ -1,35 +1,88 @@
+from perennia_crud import CrudEngine
+from perennia_crud.exceptions import RecordNotFoundError
+
+from app.core.config import load_settings
+from app.core.crud_config import build_crud_config
 from app.core.database import Database
+from app.domain.inventory.schema import RAW_MATERIAL_SCHEMA
+
+_engine = CrudEngine(build_crud_config(load_settings()), RAW_MATERIAL_SCHEMA)
 
 
 class InventoryRepository(object):
     def __init__(self, db: Database):
         self._db = db
+        self._engine = _engine
 
     # ------------------------------------------------------------ materials
 
-    def create_material(self, name: str, unit: str) -> int:
-        with self._db.transaction() as cur:
-            cur.execute("INSERT INTO raw_materials (name, unit) VALUES (%s,%s)", (name, unit))
-            material_id = cur.lastrowid
-            cur.execute(
-                "INSERT INTO raw_material_inventory (material_id) VALUES (%s)",
-                (material_id,),
-            )
-            return material_id
+    def create_material(self, name: str, unit: str, shelf_life_days: int | None = None,
+                         default_supplier_id: int | None = None,
+                         minimum_stock: float = 0, reorder_point: float = 0,
+                         lead_time_days: int = 0,
+                         initial_receipt: dict | None = None) -> int:
+        """Creates the material master row (via perennia-crud), its
+        companion inventory row, and - if initial_receipt is given - an
+        opening goods-receipt movement, all as one JDK-owned transaction.
 
-    def get_material(self, material_id: int) -> dict | None:
-        with self._db.cursor() as cur:
+        initial_receipt (all optional, but received_qty > 0 is what
+        actually triggers recording a movement): received_date, received_qty,
+        invoice_id, invoice_amt.
+        """
+        record = self._engine.create({
+            "name": name, "unit": unit,
+            "shelf_life_days": shelf_life_days, "default_supplier_id": default_supplier_id,
+        })
+        material_id = record["id"]
+
+        with self._db.transaction() as cur:
             cur.execute(
                 """
-                SELECT rm.id, rm.name, rm.unit, rm.status,
-                       inv.current_stock, inv.minimum_stock, inv.reorder_point, inv.lead_time_days
-                FROM raw_materials rm
-                LEFT JOIN raw_material_inventory inv ON inv.material_id = rm.id
-                WHERE rm.id = %s
+                INSERT INTO raw_material_inventory
+                    (material_id, minimum_stock, reorder_point, lead_time_days)
+                VALUES (%s,%s,%s,%s)
                 """,
+                (material_id, minimum_stock, reorder_point, lead_time_days),
+            )
+
+            received_qty = (initial_receipt or {}).get("received_qty") or 0
+            if received_qty > 0:
+                cur.execute(
+                    """
+                    INSERT INTO inventory_movements
+                        (material_id, movement_type, quantity, reference,
+                         received_date, invoice_id, invoice_amount)
+                    VALUES (%s, 'receipt', %s, 'Opening stock', %s, %s, %s)
+                    """,
+                    (
+                        material_id, received_qty,
+                        initial_receipt.get("received_date"),
+                        initial_receipt.get("invoice_id"),
+                        initial_receipt.get("invoice_amt"),
+                    ),
+                )
+                cur.execute(
+                    "UPDATE raw_material_inventory SET current_stock = current_stock + %s "
+                    "WHERE material_id = %s",
+                    (received_qty, material_id),
+                )
+
+        return material_id
+
+    def get_material(self, material_id: int) -> dict | None:
+        try:
+            material = self._engine.get(material_id)
+        except RecordNotFoundError:
+            return None
+        with self._db.cursor() as cur:
+            cur.execute(
+                "SELECT current_stock, minimum_stock, reorder_point, lead_time_days "
+                "FROM raw_material_inventory WHERE material_id = %s",
                 (material_id,),
             )
-            return cur.fetchone()
+            inv = cur.fetchone() or {}
+        material.update(inv)
+        return material
 
     def search_materials(self, keyword: str | None, low_stock_only: bool,
                           limit: int, offset: int) -> tuple[list[dict], int]:

@@ -15,8 +15,16 @@ class InventoryService:
         self._notify = notify
         self._user_repo = user_repo
 
-    def create_material(self, identity, name: str, unit: str) -> dict:
-        material_id = self._repo.create_material(name, unit)
+    def create_material(self, identity, name: str, unit: str,
+                         shelf_life_days: int | None = None,
+                         default_supplier_id: int | None = None,
+                         minimum_stock: float = 0, reorder_point: float = 0,
+                         lead_time_days: int = 0,
+                         initial_receipt: dict | None = None) -> dict:
+        material_id = self._repo.create_material(
+            name, unit, shelf_life_days, default_supplier_id,
+            minimum_stock, reorder_point, lead_time_days, initial_receipt,
+        )
         self._search.index("material", str(material_id), identity=SYSTEM_IDENTITY)
         return self._repo.get_material(material_id)
 

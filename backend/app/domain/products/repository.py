@@ -1,49 +1,50 @@
+from perennia_crud import CrudEngine
+from perennia_crud.exceptions import RecordNotFoundError
+
+from app.core.config import load_settings
+from app.core.crud_config import build_crud_config
 from app.core.database import Database
+from app.domain.products.schema import PRODUCT_SCHEMA
+
+_engine = CrudEngine(build_crud_config(load_settings()), PRODUCT_SCHEMA)
 
 
 class ProductRepository:
     def __init__(self, db: Database):
         self._db = db
+        self._engine = _engine
 
     # ------------------------------------------------------------ products
 
     def create(self, name: str, category: str | None, unit_of_measure: str,
                default_bag_size_kg: float) -> int:
+        record = self._engine.create({
+            "name": name, "category": category,
+            "unit_of_measure": unit_of_measure, "default_bag_size_kg": default_bag_size_kg,
+        })
+        product_id = record["id"]
+        # finished_goods_inventory is a separate table perennia-crud doesn't
+        # know about; seeded here right after so every product has a row.
         with self._db.transaction() as cur:
-            cur.execute(
-                """
-                INSERT INTO products (name, category, unit_of_measure, default_bag_size_kg)
-                VALUES (%s,%s,%s,%s)
-                """,
-                (name, category, unit_of_measure, default_bag_size_kg),
-            )
-            product_id = cur.lastrowid
             cur.execute(
                 "INSERT INTO finished_goods_inventory (product_id) VALUES (%s)",
                 (product_id,),
             )
-            return product_id
+        return product_id
 
     def update(self, product_id: int, data: dict) -> None:
-        fields, params = [], []
-        for col in ("name", "category", "unit_of_measure", "default_bag_size_kg"):
-            if col in data:
-                fields.append(f"{col} = %s")
-                params.append(data[col])
-        if not fields:
+        if not data:
             return
-        params.append(product_id)
-        with self._db.transaction() as cur:
-            cur.execute(f"UPDATE products SET {', '.join(fields)} WHERE id = %s", params)
+        self._engine.update(product_id, data)
 
     def set_status(self, product_id: int, status: str) -> None:
-        with self._db.transaction() as cur:
-            cur.execute("UPDATE products SET status = %s WHERE id = %s", (status, product_id))
+        self._engine.update(product_id, {"status": status})
 
     def get(self, product_id: int) -> dict | None:
-        with self._db.cursor() as cur:
-            cur.execute("SELECT * FROM products WHERE id = %s", (product_id,))
-            return cur.fetchone()
+        try:
+            return self._engine.get(product_id)
+        except RecordNotFoundError:
+            return None
 
     def search(self, keyword: str | None, status: str | None, limit: int, offset: int) -> tuple[list[dict], int]:
         clauses, params = [], []

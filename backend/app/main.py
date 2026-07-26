@@ -14,7 +14,7 @@ from app.core.security import settings, access, search
 from app.core.search_providers import register_all as register_search_providers
 from app.permissions import definitions as permission_definitions
 from app.api import (
-    auth, users, customers, inventory, suppliers, products, orders, mrp, reports, attachments,
+    auth, users, employees, customers, inventory, suppliers, products, orders, mrp, reports, attachments,
     settings as settings_api, production, feasibility, quotations, deliveries,
 )
 
@@ -33,6 +33,7 @@ app.add_middleware(
 
 app.include_router(auth.router)
 app.include_router(users.router)
+app.include_router(employees.router)
 app.include_router(customers.router)
 app.include_router(inventory.router)
 app.include_router(suppliers.router)

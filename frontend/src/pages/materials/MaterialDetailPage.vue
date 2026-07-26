@@ -100,6 +100,10 @@ async function submitMovement() {
         <div class="stat-value">{{ material.lead_time_days }}d</div>
         <div class="stat-label">Lead time</div>
       </div>
+      <div class="card stat-card">
+        <div class="stat-value">{{ material.shelf_life_days ?? "—" }}{{ material.shelf_life_days ? "d" : "" }}</div>
+        <div class="stat-label">Shelf-life</div>
+      </div>
     </div>
 
     <div class="card">

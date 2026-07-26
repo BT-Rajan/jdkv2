@@ -35,6 +35,21 @@ export interface AuditEntry {
   created_at: string;
 }
 
+// ── Employees (HR directory - distinct from Users/login above) ─────────────
+export interface Employee {
+  id: number;
+  full_name: string;
+  designation: string | null;
+  phone: string | null;
+  email: string | null;
+  address: string | null;
+  start_date: string | null;
+  end_date: string | null;
+  role: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 // ── Customers ─────────────────────────────────────────────────────────────
 export interface OrderHistoryEntry {
   id: number;
@@ -49,12 +64,13 @@ export interface OrderHistoryEntry {
 export interface Customer {
   id: number;
   name: string;
+  client_type: string | null;
   contact_person: string | null;
   email: string | null;
   phone: string | null;
-  address: string | null;
+  delivery_address: string | null;
   billing_address: string | null;
-  gstin: string | null;
+  tax_id: string | null;
   payment_terms: string | null;
   credit_limit: number;
   status: string;
@@ -75,6 +91,9 @@ export interface MovementEntry {
   movement_type: "receipt" | "consumption" | "adjustment";
   quantity: number;
   reference: string | null;
+  received_date: string | null;
+  invoice_id: string | null;
+  invoice_amount: number | null;
   actor_subject_id: string | null;
   created_at: string;
 }
@@ -83,6 +102,8 @@ export interface Material {
   id: number;
   name: string;
   unit: string;
+  shelf_life_days: number | null;
+  default_supplier_id: number | null;
   status: string;
   current_stock: number;
   minimum_stock: number;
@@ -112,7 +133,7 @@ export interface Supplier {
   phone: string | null;
   email: string | null;
   address: string | null;
-  gstin: string | null;
+  tax_id: string | null;
   category: string | null;
   rating: number | null;
   status: string;

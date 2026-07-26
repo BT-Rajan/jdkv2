@@ -4,24 +4,24 @@ from pydantic import BaseModel
 
 class SupplierCreateRequest(BaseModel):
     name: str
+    category: str | None = None
     contact_person: str | None = None
     phone: str | None = None
     email: str | None = None
     address: str | None = None
-    gstin: str | None = None
-    category: str | None = None
+    tax_id: str | None = None
     rating: int | None = None
     notes: str | None = None
 
 
 class SupplierUpdateRequest(BaseModel):
     name: str | None = None
+    category: str | None = None
     contact_person: str | None = None
     phone: str | None = None
     email: str | None = None
     address: str | None = None
-    gstin: str | None = None
-    category: str | None = None
+    tax_id: str | None = None
     rating: int | None = None
     notes: str | None = None
 
@@ -54,7 +54,7 @@ class SupplierResponse(BaseModel):
     phone: str | None
     email: str | None
     address: str | None
-    gstin: str | None
+    tax_id: str | None
     category: str | None
     rating: int | None
     status: str

@@ -5,7 +5,7 @@ import { useUiStore } from "../../stores/ui";
 import {
   CUSTOMERS_VIEW, INVENTORY_VIEW, SUPPLIERS_VIEW, PRODUCTS_VIEW,
   ORDERS_VIEW, MRP_VIEW, REPORTS_VIEW, USERS_VIEW, SETTINGS_VIEW,
-  FEASIBILITY_VIEW, SALES_ACCESS, DELIVERIES_VIEW,
+  FEASIBILITY_VIEW, SALES_ACCESS, DELIVERIES_VIEW, EMPLOYEES_VIEW,
 } from "../../permissions";
 
 const auth = useAuthStore();
@@ -24,6 +24,7 @@ const items: NavItem[] = [
   { to: "/materials", label: "Materials & Inventory", icon: "▦", permission: INVENTORY_VIEW },
   { to: "/suppliers", label: "Suppliers", icon: "◧", permission: SUPPLIERS_VIEW },
   { to: "/mrp", label: "MRP & ATP", icon: "◔", permission: MRP_VIEW },
+  { to: "/users-directory", label: "Employees", icon: "☰", permission: EMPLOYEES_VIEW },
   { to: "/users", label: "Users", icon: "◍", permission: USERS_VIEW },
   { to: "/settings", label: "Settings", icon: "⚙", permission: SETTINGS_VIEW },
 ];

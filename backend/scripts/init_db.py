@@ -47,7 +47,10 @@ from app.core.sentinel_access import SentinelAccess, AccessConfig
 # harmless to skip when re-applying schemas against a partially-initialized
 # database. 121 is the InnoDB "duplicate key on write or update" errno that
 # surfaces when an ALTER TABLE ADD CONSTRAINT is re-run.
-_ALREADY_EXISTS_ERRNOS = {1005, 1022, 1050, 1061, 1826, 121}
+# 1054: unknown column - lets ALTER TABLE ... CHANGE COLUMN <old> <new>
+# rename migrations be skipped on a fresh install, where schema.sql already
+# creates the target column directly and <old> never existed.
+_ALREADY_EXISTS_ERRNOS = {1005, 1022, 1050, 1054, 1060, 1061, 1826, 121}
 # 1065: "Query was empty" - defensive fallback for a comment-only chunk
 # slipping past _has_executable_sql.
 _SKIPPABLE_ERRNOS = _ALREADY_EXISTS_ERRNOS | {1065}
@@ -200,6 +203,13 @@ def run(clean: bool = False) -> None:
         jdk_schema = (Path(__file__).resolve().parent.parent / "sql" / "schema.sql").read_text(encoding="utf-8")
         _apply(cur, jdk_schema, "jdk")
         print("[OK] JDK schema applied successfully.\n")
+
+        migrations_dir = Path(__file__).resolve().parent.parent / "sql" / "migrations"
+        for migration_path in sorted(migrations_dir.glob("*.sql")):
+            label = f"jdk:{migration_path.stem}"
+            print(f"Applying {migration_path.name}...")
+            _apply(cur, migration_path.read_text(encoding="utf-8"), label)
+            print(f"[OK] {migration_path.name} applied successfully.\n")
 
     conn.close()
 

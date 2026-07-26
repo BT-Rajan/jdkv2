@@ -1,10 +1,23 @@
-from datetime import datetime
+from datetime import date, datetime
 from pydantic import BaseModel
+
+
+class InitialReceiptRequest(BaseModel):
+    received_date: date | None = None
+    received_qty: float | None = None
+    invoice_id: str | None = None
+    invoice_amt: float | None = None
 
 
 class MaterialCreateRequest(BaseModel):
     name: str
     unit: str = "kg"
+    shelf_life_days: int | None = None
+    default_supplier_id: int | None = None
+    minimum_stock: float = 0
+    reorder_point: float = 0
+    lead_time_days: int = 0
+    initial_receipt: InitialReceiptRequest | None = None
 
 
 class ReorderConfigRequest(BaseModel):
@@ -37,6 +50,8 @@ class MaterialResponse(BaseModel):
     id: int
     name: str
     unit: str
+    shelf_life_days: int | None = None
+    default_supplier_id: int | None = None
     status: str
     current_stock: float
     minimum_stock: float

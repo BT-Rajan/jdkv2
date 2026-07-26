@@ -15,8 +15,15 @@ export const materialsApi = {
 
   get: (id: number) => apiFetch<Material>(`/api/materials/${id}`),
 
-  create: (body: { name: string; unit: string }) =>
-    apiFetch<Material>("/api/materials", { method: "POST", body }),
+  create: (body: {
+    name: string; unit: string;
+    shelf_life_days?: number | null; default_supplier_id?: number | null;
+    minimum_stock?: number; reorder_point?: number; lead_time_days?: number;
+    initial_receipt?: {
+      received_date?: string | null; received_qty?: number | null;
+      invoice_id?: string | null; invoice_amt?: number | null;
+    } | null;
+  }) => apiFetch<Material>("/api/materials", { method: "POST", body }),
 
   setReorderConfig: (id: number, body: { minimum_stock: number; reorder_point: number; lead_time_days: number }) =>
     apiFetch<Material>(`/api/materials/${id}/reorder-config`, { method: "PATCH", body }),

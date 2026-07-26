@@ -36,12 +36,13 @@ CREATE TABLE IF NOT EXISTS user_admin_audit (
 CREATE TABLE IF NOT EXISTS customers (
   id               INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
   name             VARCHAR(200) NOT NULL UNIQUE,
+  client_type      VARCHAR(50)  NULL,
   contact_person   VARCHAR(150) NULL,
   email            VARCHAR(200) NULL,
   phone            VARCHAR(50)  NULL,
-  address          TEXT         NULL,
+  delivery_address TEXT         NULL,
   billing_address  TEXT         NULL,
-  gstin            VARCHAR(20)  NULL,
+  tax_id           VARCHAR(20)  NULL,
   payment_terms    VARCHAR(100) NULL,
   credit_limit     DECIMAL(14,2) NOT NULL DEFAULT 0,
   status           ENUM('active','inactive') NOT NULL DEFAULT 'active',
@@ -52,9 +53,14 @@ CREATE TABLE IF NOT EXISTS customers (
 
 -- ── Raw Materials & Inventory ────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS raw_materials (
-  id    INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-  name  VARCHAR(200) NOT NULL UNIQUE,
-  unit  VARCHAR(20)  NOT NULL DEFAULT 'kg',
+  id                   INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  name                 VARCHAR(200) NOT NULL UNIQUE,
+  unit                 VARCHAR(20)  NOT NULL DEFAULT 'kg',
+  shelf_life_days      SMALLINT     NULL,
+  -- default_supplier_id references suppliers(id), added via ALTER TABLE
+  -- below the suppliers table further down, since suppliers doesn't exist
+  -- yet at this point in the script.
+  default_supplier_id  INT UNSIGNED NULL,
   status ENUM('active','inactive') NOT NULL DEFAULT 'active'
 ) ENGINE=InnoDB;
 
@@ -75,6 +81,12 @@ CREATE TABLE IF NOT EXISTS inventory_movements (
   movement_type ENUM('receipt','consumption','adjustment') NOT NULL,
   quantity      DECIMAL(14,3) NOT NULL,
   reference     VARCHAR(120) NULL,
+  -- Goods-receipt paperwork, populated when movement_type = 'receipt'.
+  -- received_date is the physical receiving date, which can differ from
+  -- created_at (when the record was entered).
+  received_date   DATE          NULL,
+  invoice_id      VARCHAR(80)   NULL,
+  invoice_amount  DECIMAL(12,2) NULL,
   actor_subject_id CHAR(36) NULL,
   created_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_movement_material FOREIGN KEY (material_id) REFERENCES raw_materials(id) ON DELETE CASCADE
@@ -88,13 +100,19 @@ CREATE TABLE IF NOT EXISTS suppliers (
   phone          VARCHAR(50)  NULL,
   email          VARCHAR(200) NULL,
   address        TEXT         NULL,
-  gstin          VARCHAR(20)  NULL,
+  tax_id         VARCHAR(20)  NULL,
   category       VARCHAR(100) NULL,
   rating         TINYINT      NULL,
   status         ENUM('active','inactive') NOT NULL DEFAULT 'active',
   notes          TEXT         NULL,
   created_at     DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
+
+-- raw_materials.default_supplier_id references this table, which didn't
+-- exist yet when raw_materials was created above.
+ALTER TABLE raw_materials
+  ADD CONSTRAINT fk_material_default_supplier
+      FOREIGN KEY (default_supplier_id) REFERENCES suppliers(id);
 
 CREATE TABLE IF NOT EXISTS raw_material_supply (
   id                INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -235,6 +253,27 @@ CREATE TABLE IF NOT EXISTS entity_attachments (
   uploaded_by_subject_id CHAR(36)    NULL,
   created_at            DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
   KEY idx_attachments_entity (entity_type, entity_id)
+) ENGINE=InnoDB;
+
+-- ── Employees (HR directory) ──────────────────────────────────────────────
+-- Deliberately separate from perennia-auth's auth_subjects/auth_identifiers
+-- and from user_profiles (login-linked user administration, above). This
+-- table has no bearing on who can sign in - it is a plain business
+-- directory of people. `role` is a free-text job title/role label, NOT an
+-- RBAC permission role (those are seeded/enforced via perennia-access, see
+-- app/permissions/definitions.py).
+CREATE TABLE IF NOT EXISTS employees (
+  id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  full_name     VARCHAR(150) NOT NULL,
+  designation   VARCHAR(100) NULL,
+  phone         VARCHAR(30)  NULL,
+  email         VARCHAR(200) NULL,
+  address       TEXT         NULL,
+  start_date    DATE         NULL,
+  end_date      DATE         NULL,
+  role          VARCHAR(100) NULL,
+  created_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at    DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
 -- ── Factory configuration ─────────────────────────────────────────────────

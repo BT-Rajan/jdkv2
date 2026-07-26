@@ -35,8 +35,9 @@ onMounted(load);
 
 const showEdit = ref(false);
 const editForm = reactive({
-  name: "", contact_person: "", email: "", phone: "", address: "",
-  billing_address: "", gstin: "", payment_terms: "", credit_limit: 0, notes: "",
+  name: "", client_type: "", contact_person: "", email: "", phone: "",
+  delivery_address: "", billing_address: "", tax_id: "", payment_terms: "",
+  credit_limit: 0, notes: "",
 });
 function openEdit() {
   if (!customer.value) return;
@@ -91,13 +92,15 @@ async function confirmDeactivate() {
     <div class="card">
       <div class="card-header"><h3>Details</h3></div>
       <div class="card-body form-grid">
+        <div><div class="text-xs muted">Type</div><div>{{ customer.client_type || "—" }}</div></div>
         <div><div class="text-xs muted">Contact person</div><div>{{ customer.contact_person || "—" }}</div></div>
         <div><div class="text-xs muted">Email</div><div>{{ customer.email || "—" }}</div></div>
         <div><div class="text-xs muted">Phone</div><div>{{ customer.phone || "—" }}</div></div>
-        <div><div class="text-xs muted">GSTIN</div><div>{{ customer.gstin || "—" }}</div></div>
+        <div><div class="text-xs muted">Tax ID</div><div>{{ customer.tax_id || "—" }}</div></div>
         <div><div class="text-xs muted">Payment terms</div><div>{{ customer.payment_terms || "—" }}</div></div>
-        <div><div class="text-xs muted">Credit limit</div><div>₹{{ customer.credit_limit.toLocaleString() }}</div></div>
-        <div style="grid-column: 1 / -1"><div class="text-xs muted">Address</div><div>{{ customer.address || "—" }}</div></div>
+        <div><div class="text-xs muted">Credit limit</div><div>{{ customer.credit_limit.toLocaleString() }} KWD</div></div>
+        <div style="grid-column: 1 / -1"><div class="text-xs muted">Delivery address</div><div>{{ customer.delivery_address || "—" }}</div></div>
+        <div style="grid-column: 1 / -1"><div class="text-xs muted">Billing address</div><div>{{ customer.billing_address || "Same as delivery" }}</div></div>
         <div style="grid-column: 1 / -1" v-if="customer.notes"><div class="text-xs muted">Notes</div><div>{{ customer.notes }}</div></div>
       </div>
     </div>
@@ -125,15 +128,26 @@ async function confirmDeactivate() {
 
     <Modal v-if="showEdit" title="Edit Customer" wide @close="showEdit = false">
       <form class="form-grid" @submit.prevent="submitEdit">
-        <div class="field"><label>Name</label><input v-model="editForm.name" class="input" /></div>
-        <div class="field"><label>Contact person</label><input v-model="editForm.contact_person" class="input" /></div>
-        <div class="field"><label>Email</label><input v-model="editForm.email" class="input" /></div>
+        <div class="field"><label>Client Name *</label><input v-model="editForm.name" class="input" required /></div>
+        <div class="field"><label>Type</label><input v-model="editForm.client_type" class="input" /></div>
+        <div class="field"><label>Contact Person</label><input v-model="editForm.contact_person" class="input" placeholder="Contact name" /></div>
         <div class="field"><label>Phone</label><input v-model="editForm.phone" class="input" /></div>
-        <div class="field"><label>GSTIN</label><input v-model="editForm.gstin" class="input" /></div>
-        <div class="field"><label>Payment terms</label><input v-model="editForm.payment_terms" class="input" /></div>
-        <div class="field"><label>Credit limit</label><input v-model.number="editForm.credit_limit" type="number" class="input" /></div>
-        <div class="field" style="grid-column:1/-1"><label>Address</label><textarea v-model="editForm.address" class="input" rows="2" /></div>
-        <div class="field" style="grid-column:1/-1"><label>Notes</label><textarea v-model="editForm.notes" class="input" rows="2" /></div>
+        <div class="field"><label>Email</label><input v-model="editForm.email" class="input" /></div>
+        <div class="field"><label>Tax-id</label><input v-model="editForm.tax_id" class="input" /></div>
+        <div class="field"><label>Payment Terms</label><input v-model="editForm.payment_terms" class="input" /></div>
+        <div class="field"><label>Credit Limit (KWD)</label><input v-model.number="editForm.credit_limit" type="number" class="input" /></div>
+        <div class="field" style="grid-column:1/-1">
+          <label>Delivery Address</label>
+          <textarea v-model="editForm.delivery_address" class="input" rows="2" placeholder="Delivery site address" />
+        </div>
+        <div class="field" style="grid-column:1/-1">
+          <label>Billing Address</label>
+          <textarea v-model="editForm.billing_address" class="input" rows="2" placeholder="Leave blank if same as delivery" />
+        </div>
+        <div class="field" style="grid-column:1/-1">
+          <label>Notes</label>
+          <textarea v-model="editForm.notes" class="input" rows="2" placeholder="Internal notes about this client" />
+        </div>
       </form>
       <template #footer>
         <button class="btn btn-secondary" @click="showEdit = false">Cancel</button>
