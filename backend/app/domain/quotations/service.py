@@ -1,7 +1,7 @@
 from datetime import date
 
 from app.core.errors import AppError
-from app.domain.quotations.repository import QuotationRepository, QUOTATION_STATUSES
+from app.domain.quotations.repository import QuotationRepository
 from app.domain.feasibility.repository import FeasibilityRepository, OUTCOMES_ALLOWING_QUOTATION
 from app.domain.orders.repository import OrderRepository
 

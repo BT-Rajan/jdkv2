@@ -4,7 +4,6 @@ from app.core.sentinel_access import AuthenticatedIdentity
 
 from app.core.security import auth, access, get_current_identity
 from app.models.users import LoginRequest, TokenResponse, RefreshRequest, MeResponse
-from app.domain.users.service import UserAdminService
 from app.domain.users.repository import UserAdminRepository
 from app.core.database import Database
 from app.core.config import load_settings

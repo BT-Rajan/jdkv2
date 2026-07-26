@@ -24,7 +24,6 @@ leaves "the exact calculation" open; the constraints list underneath always
 shows the concrete facts (available_kg, shortages, supplier lead times) so a
 human can override the label.
 """
-from dataclasses import dataclass
 from datetime import date
 
 from app.domain.orders.repository import OrderRepository

@@ -25,7 +25,6 @@ a Purchasing module exists; every value that is a projection rather than a
 committed fact is labelled `is_projected` in the output so the frontend
 doesn't present it as certain.
 """
-from dataclasses import dataclass, field
 from datetime import date, timedelta
 
 from app.domain.orders.repository import OrderRepository
