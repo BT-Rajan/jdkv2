@@ -19,7 +19,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from perennia_auth import PerenniaAuth, AuthConfig, DatabaseConfig as AuthDatabaseConfig, EmailAlreadyExistsError
-from app.core.sentinel_access import SentinelAccess, AccessConfig
+from app.core.sentinel_access import SentinelAccess, AccessConfig, AuthenticatedIdentity
 
 from app.core.config import load_settings
 from app.core.database import Database
@@ -71,8 +71,7 @@ def run(email: str, password: str, full_name: str):
     try:
         subject_id = auth.register(email, password)
     except EmailAlreadyExistsError:
-        print(f"{email} already exists - not creating a duplicate.")
-        return None
+        return _repair_existing(auth, access, settings, email, full_name)
 
     auth.verify_email(mailer.last_verification_token)
     access.assign_role_to_user(subject_id, "administrator")
@@ -81,6 +80,54 @@ def run(email: str, password: str, full_name: str):
     repo.upsert_profile(subject_id, full_name, None, None)
 
     print(f"Administrator created: {email} (subject_id={subject_id})")
+    return subject_id
+
+
+def _repair_existing(auth: PerenniaAuth, access: SentinelAccess, settings, email: str, full_name: str):
+    """The account already exists - this used to just print a message and
+    stop, which meant an account that had never been verified or had never
+    gotten the administrator role (e.g. a first run that was interrupted, or
+    one that predates a role/permission change) stayed permanently unusable:
+    re-running the script did nothing to fix it, and the only symptom was
+    'Access denied' after an otherwise-successful login. Idempotently ensure
+    the account is active and holds the administrator role instead.
+    """
+    db = Database(settings)
+    with db.cursor() as cur:
+        cur.execute(
+            "SELECT s.id AS subject_id, s.status, ai.id AS identifier_id, ai.is_verified "
+            "FROM auth_subjects s JOIN auth_identifiers ai ON ai.subject_id = s.id "
+            "WHERE ai.email = %s",
+            (email,),
+        )
+        row = cur.fetchone()
+
+    if not row:
+        print(f"{email} already exists in perennia-auth but no matching subject/identifier row "
+              f"was found - this shouldn't happen and needs manual investigation.")
+        return None
+
+    subject_id = row["subject_id"]
+    print(f"{email} already exists (subject_id={subject_id}) - checking it's fully set up.")
+
+    if not row["is_verified"] or row["status"] != "active":
+        with db.transaction() as cur:
+            cur.execute("UPDATE auth_identifiers SET is_verified = 1 WHERE id = %s", (row["identifier_id"],))
+            cur.execute("UPDATE auth_subjects SET status = 'active' WHERE id = %s", (subject_id,))
+        print(f"  - marked the account verified and active (was status='{row['status']}', "
+              f"verified={bool(row['is_verified'])})")
+    else:
+        print("  - already verified and active")
+
+    roles = access.get_identity_roles(AuthenticatedIdentity(subject_id=subject_id, session_id="system"))
+    if "administrator" not in roles:
+        access.assign_role_to_user(subject_id, "administrator")
+        print(f"  - assigned the administrator role (previously had: {roles or 'none'})")
+    else:
+        print("  - administrator role already assigned")
+
+    UserAdminRepository(db).upsert_profile(subject_id, full_name, None, None)
+    print(f"Administrator ready: {email} (subject_id={subject_id})")
     return subject_id
 
 

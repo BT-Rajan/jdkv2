@@ -35,6 +35,7 @@ export const usersApi = {
 };
 
 export const ASSIGNABLE_ROLES = [
+  { code: "sales", label: "Sales" },
   { code: "operations", label: "Operations" },
   { code: "production", label: "Production" },
   { code: "procurement", label: "Procurement" },

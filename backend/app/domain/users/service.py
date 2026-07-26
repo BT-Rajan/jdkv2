@@ -13,9 +13,9 @@ from perennia_notify import PerenniaNotify
 
 from app.core.errors import AppError
 from app.domain.users.repository import UserAdminRepository
-from app.permissions.definitions import SYSTEM_IDENTITY
+from app.permissions.definitions import SYSTEM_IDENTITY, ASSIGNABLE_ROLES
 
-ASSIGNABLE_ROLE_CODES = {"administrator", "executive", "operations", "production", "procurement"}
+ASSIGNABLE_ROLE_CODES = {code for code, _ in ASSIGNABLE_ROLES}
 
 
 class UserAdminService:
