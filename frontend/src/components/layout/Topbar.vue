@@ -43,7 +43,8 @@ async function handleLogout() {
   border-bottom: 1px solid var(--color-neutral-200);
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: 100;
+  flex-shrink: 0;
 }
 .spacer { flex: 1; }
 .user-menu { position: relative; }
